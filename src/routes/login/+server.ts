@@ -2,15 +2,15 @@ import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import type { RESTPostOAuth2AccessTokenResult, RESTGetAPIUserResult } from 'discord-api-types/v10';
 import getAvatarURL from '$lib/scripts/util/getAvatarURL.js';
-import { SECRET, BOT_TOKEN } from '$env/static/private';
+import { SECRET, BOT_TOKEN, VITE_ID } from '$env/static/private';
 
 export const GET: RequestHandler = async (req) => {
 	const bearer = req.request.headers.get('Authorization')?.replace('Bearer ', '');
 	if (!bearer) return error(401, 'Unauthorized');
 
 	const body = new URLSearchParams({
-		client_id: import.meta.env.VITE_ID as string,
-		client_secret: SECRET as string,
+		client_id: VITE_ID,
+		client_secret: SECRET,
 		grant_type: 'authorization_code',
 		code: bearer,
 		redirect_uri: `${import.meta.env.VITE_HOSTNAME}/login`,
