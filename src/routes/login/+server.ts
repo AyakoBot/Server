@@ -43,22 +43,17 @@ export const GET: RequestHandler = async (req) => {
 		path: '/',
 		domain: '.ayakobot.com',
 		maxAge: token.expires_in,
-		sameSite: true,
+		sameSite: 'strict',
 		httpOnly: false,
 		secure: false,
 	};
-
-	req.cookies.set('discord-token', token.access_token, {
-		...basicCookieOptions,
-		secure: import.meta.env.VITE_ENV === 'prod',
-		httpOnly: true,
-	});
 
 	return json({
 		id: user.id,
 		username: user.global_name ?? user.username,
 		avatar: getAvatarURL(user),
 		expires: token.expires_in,
+		access_token: token.access_token,
 	} as Returned);
 };
 
@@ -67,6 +62,7 @@ export type Returned = {
 	username: string;
 	avatar: string;
 	expires: number;
+	access_token: string;
 };
 
 const joinGuild = (auth: string, userId: string) => {

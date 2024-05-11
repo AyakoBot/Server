@@ -18,7 +18,7 @@ export default async (req: RequestEvent) => {
 		path: '/',
   domain: '.ayakobot.com',
 		maxAge: 86400,
-		sameSite: true,
+		sameSite: 'strict',
 		httpOnly: false,
 		secure: false,
 	};
