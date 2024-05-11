@@ -16,6 +16,7 @@ export default async (req: RequestEvent) => {
 	const basicCookieOptions: Parameters<typeof req.cookies.set>[2] = {
 		expires: new Date(Date.now() + 86400000),
 		path: '/',
+  domain: '.ayakobot.com',
 		maxAge: 86400,
 		sameSite: true,
 		httpOnly: false,

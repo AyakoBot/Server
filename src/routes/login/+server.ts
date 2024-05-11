@@ -3,17 +3,18 @@ import type { RequestHandler } from './$types';
 import type { RESTPostOAuth2AccessTokenResult, RESTGetAPIUserResult } from 'discord-api-types/v10';
 import getAvatarURL from '$lib/scripts/util/getAvatarURL.js';
 import { SECRET, BOT_TOKEN } from '$env/static/private';
+import { PUBLIC_ID, PUBLIC_HOSTNAME } from '$env/static/public';
 
 export const GET: RequestHandler = async (req) => {
 	const bearer = req.request.headers.get('Authorization')?.replace('Bearer ', '');
 	if (!bearer) return error(401, 'Unauthorized');
 
 	const body = new URLSearchParams({
-		client_id: import.meta.env.VITE_ID as string,
+		client_id: PUBLIC_ID,
 		client_secret: SECRET as string,
 		grant_type: 'authorization_code',
 		code: bearer,
-		redirect_uri: `${import.meta.env.VITE_HOSTNAME}/login`,
+		redirect_uri: `${PUBLIC_HOSTNAME}/login`,
 	});
 
 	const tokeRes = await fetch('https://discord.com/api/v10/oauth2/token', {
@@ -22,8 +23,11 @@ export const GET: RequestHandler = async (req) => {
 		body,
 	});
 
-	const token = (await tokeRes.json()) as RESTPostOAuth2AccessTokenResult | { error: string };
+	const token = (await tokeRes.json()) as
+		| RESTPostOAuth2AccessTokenResult
+		| { errors: string[]; error: string };
 	if ('error' in token) return error(400, token.error);
+	if ('errors' in token) return error(400, JSON.stringify(token.errors));
 
 	const userRes = await fetch('https://discord.com/api/v10/users/@me', {
 		headers: { Authorization: `${token.token_type} ${token.access_token}` },
@@ -37,6 +41,7 @@ export const GET: RequestHandler = async (req) => {
 	const basicCookieOptions: Parameters<typeof req.cookies.set>[2] = {
 		expires: new Date(Date.now() + token.expires_in),
 		path: '/',
+		domain: '.ayakobot.com',
 		maxAge: token.expires_in,
 		sameSite: true,
 		httpOnly: false,
