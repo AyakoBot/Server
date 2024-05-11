@@ -37,6 +37,8 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@discordjs/core": "^1.2.0",
+		"@discordjs/rest": "^2.3.0",
 		"@fortawesome/fontawesome-svg-core": "^6.5.2",
 		"@fortawesome/free-brands-svg-icons": "^6.5.2",
 		"@fortawesome/free-regular-svg-icons": "^6.5.2",

@@ -1,18 +1,22 @@
-import user2Cookies from '$lib/scripts/util/user2Cookies';
+import { type AppealPunishment } from '$lib/scripts/types';
+import getPunishments from '$lib/scripts/util/getPunishments.js';
+import validateToken from '$lib/scripts/util/validateToken';
 import DataBase from '$lib/server/database.js';
+import { AnswerType, type appealquestions } from '@prisma/client';
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { PunishmentType, type AppealPunishment } from '$lib/scripts/types';
-import { AnswerType, type appealquestions } from '@prisma/client';
-import getPunishments from '$lib/scripts/util/getPunishments.js';
 
 export const GET: RequestHandler = async (req) => {
-	const authenticated = await user2Cookies(req);
-	if (authenticated) return error(authenticated, 'Invalid or no token provided');
+	const token = await validateToken(req);
+	if (token) return error(403, 'Invalid or no token provided');
+
+	const user = await DataBase.users.findFirst({
+		where: { accesstoken: token },
+		select: { userid: true },
+	});
 
 	const { guildId, punishmentId } = req.params;
-	const userId = req.cookies.get('discord-id');
-	if (!userId) return error(401, 'Unauthorized');
+	if (!user) return error(401, 'Unauthorized');
 
 	const settings = await DataBase.appealsettings.findUnique({
 		where: { guildid: guildId, active: true },
@@ -25,13 +29,15 @@ export const GET: RequestHandler = async (req) => {
 	});
 	if (!questions.length) return error(404, 'No appeal questions found');
 
-	const punishment = (await getPunishments({ guildId, userId, punishmentId })).map((p) => ({
-		type: p.type,
-		reason: p.reason,
-		id: Number(p.uniquetimestamp),
-		channelname: p.channelname,
-		duration: 'duration' in p ? Number(p.duration) : undefined,
-	}))[0];
+	const punishment = (await getPunishments({ guildId, userId: user.userid, punishmentId })).map(
+		(p) => ({
+			type: p.type,
+			reason: p.reason,
+			id: Number(p.uniquetimestamp),
+			channelname: p.channelname,
+			duration: 'duration' in p ? Number(p.duration) : undefined,
+		}),
+	)[0];
 
 	return json({ punishment, settings, questions } as Returned);
 };
@@ -42,11 +48,14 @@ export type Returned = {
 };
 
 export const POST: RequestHandler = async (req) => {
-	const authenticated = await user2Cookies(req);
-	if (authenticated) return error(authenticated, 'Invalid or no token provided');
+	const token = await validateToken(req);
+	if (token) return error(403, 'Invalid or no token provided');
 
-	const userId = req.cookies.get('discord-id');
-	if (!userId) return error(401, 'Unauthorized');
+	const user = await DataBase.users.findFirst({
+		where: { accesstoken: token },
+		select: { userid: true },
+	});
+	if (!user) return error(401, 'Unauthorized');
 
 	const { guildId, punishmentId } = req.params;
 
@@ -65,7 +74,7 @@ export const POST: RequestHandler = async (req) => {
 	if (!numbersAsKeys.every((k) => isNaN(k)))
 		return error(400, 'One or more question Ids are not numbers');
 
-	const punishment = await getPunishments({ guildId, punishmentId, userId });
+	const punishment = await getPunishments({ guildId, punishmentId, userId: user.userid });
 	if (!punishment.length) return error(400, 'Unknown punishment Id');
 
 	const questions = await DataBase.appealquestions.findMany({
@@ -123,7 +132,7 @@ export const POST: RequestHandler = async (req) => {
 		}
 	});
 
-  if (!valid) return error(400, 'Invalid answer');
+	if (!valid) return error(400, 'Invalid answer');
 
 	return json({ goofy: true });
 };

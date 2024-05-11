@@ -1,20 +1,15 @@
 import DataBase from '$lib/server/database.js';
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import type { APIGuild } from 'discord-api-types/v10';
-import user2Cookies from '$lib/scripts/util/user2Cookies';
+import type { APIGuild, RESTGetAPICurrentUserGuildsResult } from 'discord-api-types/v10';
+import validateToken from '$lib/scripts/util/validateToken.js';
+import API from '$lib/server/api.js';
 
 export const GET: RequestHandler = async (req) => {
-	const authenticated = await user2Cookies(req);
-	if (authenticated) return error(authenticated, 'Invalid or no token provided');
+	const token = await validateToken(req);
+	if (!token) return error(403, 'Invalid or no token provided');
 
-	const token = req.cookies.get('discord-token');
-
-	const res = await fetch('https://discord.com/api/v10/users/@me/guilds', {
-		headers: { Authorization: `Bearer ${token}` },
-	});
-
-	const guilds = (await res.json()) as APIGuild[];
+	const guilds = await API.userAPIs.get(token)!.users.getGuilds();
 
 	const enabledAppealIds = await DataBase.appealsettings.findMany({
 		where: { guildid: { in: guilds.map((g) => g.id) }, active: true },
@@ -28,13 +23,15 @@ export const GET: RequestHandler = async (req) => {
 
 	const enabledAppeals = enabledAppealIds
 		.map((g) => guilds.find((guild) => guild.id === g.guildid))
-		.filter((g): g is APIGuild => !!g);
+		.filter((g): g is RESTGetAPICurrentUserGuildsResult[number] => !!g);
 
 	return json({
 		appealEnabled: enabledAppeals.map((g) => makeReturnGuild(g)),
 		otherMutuals: botGuilds
 			.map((g) => guilds.find((guild) => guild.id === g.guildid))
-			.filter((g): g is APIGuild => !!g && !enabledAppeals.includes(g))
+			.filter(
+				(g): g is RESTGetAPICurrentUserGuildsResult[number] => !!g && !enabledAppeals.includes(g),
+			)
 			.map((g) => makeReturnGuild(g)),
 	} as Returned);
 };
@@ -46,9 +43,8 @@ export type Returned = {
 	otherMutuals: ReturnedGuild;
 };
 
-const makeReturnGuild = (g: APIGuild) => ({
+const makeReturnGuild = (g: RESTGetAPICurrentUserGuildsResult[number]) => ({
 	id: g.id,
 	name: g.name,
 	icon: g.icon,
-	banner: g.banner,
 });

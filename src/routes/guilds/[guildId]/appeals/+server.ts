@@ -1,22 +1,23 @@
-import user2Cookies from '$lib/scripts/util/user2Cookies';
-import DataBase from '$lib/server/database.js';
-import { error, json, redirect } from '@sveltejs/kit';
-import type { RequestHandler } from './$types';
-import { PunishmentType, type AppealPunishment } from '$lib/scripts/types';
+import { type AppealPunishment } from '$lib/scripts/types';
 import getPunishments from '$lib/scripts/util/getPunishments.js';
+import validateToken from '$lib/scripts/util/validateToken';
+import DataBase from '$lib/server/database.js';
+import { error, json } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async (req) => {
-	const authenticated = await user2Cookies(req);
-	if (authenticated) return error(authenticated, 'Invalid or no token provided');
+	const token = await validateToken(req);
+	if (!token) return error(403, 'Invalid or no token provided');
 
 	const { guildId } = req.params;
-	const userId = req.cookies.get('discord-id');
-	if (!userId) return error(401, 'Unauthorized');
-
-	const results = await getPunishments({ guildId, userId });
+	const user = await DataBase.users.findFirst({
+		where: { accesstoken: token },
+		select: { userid: true },
+	});
+	if (!user) return error(401, 'Unauthorized');
 
 	return json(
-		results.map((p) => ({
+		(await getPunishments({ guildId, userId: user.userid })).map((p) => ({
 			type: p.type,
 			reason: p.reason,
 			id: Number(p.uniquetimestamp),
