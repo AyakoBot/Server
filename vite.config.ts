@@ -5,14 +5,21 @@ import { sveltekit } from '@sveltejs/kit/vite';
 import { PluginOption, defineConfig } from 'vite';
 import UnoCSS from '@unocss/svelte-scoped/vite';
 
+const allowedOrigins = [
+	'https://dev.ayakobot.com',
+	'https://ayakobot.com',
+	'https://apiv2.ayakobot.com',
+];
+
 /** @type {import('vite').Plugin} */
 const viteServerConfig = (): PluginOption => ({
 	name: 'add-headers',
 	configureServer: (server) => {
 		server.middlewares.use((req, res, next) => {
-   if (!req.url.startsWith('https://dev.ayakobot.com/api')) return next();
-   
-   res.setHeader('Access-Control-Allow-Origin', '*');
+			if (req.headers.origin && allowedOrigins.includes(req.headers.origin)) {
+				res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
+			}
+
 			res.setHeader('Access-Control-Allow-Methods', '*');
 			res.setHeader('Cross-Origin-Opener-Policy', 'unsafe-none');
 			res.setHeader('Cross-Origin-Embedder-Policy', 'unsafe-none');
