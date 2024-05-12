@@ -3,7 +3,6 @@
 import { sveltekit } from '@sveltejs/kit/vite';
 // import Unlighthouse from '@unlighthouse/vite';
 import { PluginOption, defineConfig } from 'vite';
-import UnoCSS from '@unocss/svelte-scoped/vite';
 
 const allowedOrigins = [
 	'https://dev.ayakobot.com',
@@ -31,7 +30,6 @@ const viteServerConfig = (): PluginOption => ({
 export default defineConfig({
 	plugins: [
 		sveltekit(),
-		UnoCSS({ injectReset: '' }),
 		// Unlighthouse({}),
 		viteServerConfig(),
 	],

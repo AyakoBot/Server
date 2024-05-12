@@ -10,15 +10,13 @@ export const GET: RequestHandler = async (req) => {
 	const bearer = req.request.headers.get('Authorization')?.replace('Bearer ', '');
 	if (!bearer) return error(401, 'Unauthorized');
 
-	const token = await API.API.oauth2
-		.tokenExchange({
-			client_id: PUBLIC_ID,
-			client_secret: SECRET,
-			grant_type: 'authorization_code',
-			code: bearer,
-			redirect_uri: `${PUBLIC_HOSTNAME}/login`,
-		})
-		.catch(() => null);
+	const token = await API.API.oauth2.tokenExchange({
+		client_id: PUBLIC_ID,
+		client_secret: SECRET,
+		grant_type: 'authorization_code',
+		code: bearer,
+		redirect_uri: `${PUBLIC_HOSTNAME}/login`,
+	});
 
 	if (!token) return error(401, 'Invalid code');
 	const valid = await validateToken(token.access_token);
