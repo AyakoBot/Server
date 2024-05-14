@@ -1,5 +1,5 @@
 import DataBase from '$lib/server/database.js';
-import { PunishmentType } from '$lib/scripts/types';
+import { PunishmentType } from '@ayako/website/src/lib/scripts/types';
 
 export default async ({
 	guildId,
