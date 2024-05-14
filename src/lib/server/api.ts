@@ -10,6 +10,9 @@ const self = {
 	API: api,
 	userAPIs: new Map<string, (typeof API)['prototype']>(),
 	makeAPI: (token: string) => {
+		const existing = self.userAPIs.get(token);
+		if (existing) return existing;
+
 		const rest = new REST({ authPrefix: 'Bearer' });
 		const api = new API(rest.setToken(token));
 

@@ -5,10 +5,12 @@ import DataBase from '$lib/server/database.js';
 import { AnswerType, type appealquestions } from '@prisma/client';
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import io from 'socket.io-client';
+import { SOCKET_TOKEN } from '$env/static/private';
 
 export const GET: RequestHandler = async (req) => {
 	const token = await validateToken(req);
-	if (token) return error(403, 'Invalid or no token provided');
+	if (!token) return error(403, 'Invalid or no token provided');
 
 	const user = await DataBase.users.findFirst({
 		where: { accesstoken: token },
@@ -49,7 +51,7 @@ export type Returned = {
 
 export const POST: RequestHandler = async (req) => {
 	const token = await validateToken(req);
-	if (token) return error(403, 'Invalid or no token provided');
+	if (!token) return error(403, 'Invalid or no token provided');
 
 	const user = await DataBase.users.findFirst({
 		where: { accesstoken: token },
@@ -71,8 +73,9 @@ export const POST: RequestHandler = async (req) => {
 	if (!valuesAreStrings) return error(400, 'One or more values are not strings');
 
 	const numbersAsKeys = keys.map((k) => Number(k));
-	if (!numbersAsKeys.every((k) => isNaN(k)))
+	if (!numbersAsKeys.every((k) => !isNaN(k))) {
 		return error(400, 'One or more question Ids are not numbers');
+	}
 
 	const punishment = await getPunishments({ guildId, punishmentId, userId: user.userid });
 	if (!punishment.length) return error(400, 'Unknown punishment Id');
@@ -134,5 +137,72 @@ export const POST: RequestHandler = async (req) => {
 
 	if (!valid) return error(400, 'Invalid answer');
 
-	return json({ goofy: true });
+	await DataBase.appealanswers.createMany({
+		data: questions
+			.map((q) => {
+				const value = body[Number(q.uniquetimestamp)].trim();
+				const base: Parameters<typeof DataBase.appealanswers.create>[0]['data'] = {
+					punishmentid: punishmentId,
+					type: q.answertype,
+				};
+
+				switch (q.answertype) {
+					case AnswerType.boolean: {
+						if (value === 'false') base.boolean = false;
+						if (value === 'true') base.boolean = true;
+						break;
+					}
+					case AnswerType.single_choice: {
+						const v = JSON.parse(value) as string[];
+						base.singlechoice = v[0];
+						break;
+					}
+					case AnswerType.multiple_choice: {
+						const v = JSON.parse(value) as string[];
+						base.multiplechoice = v;
+						break;
+					}
+					case AnswerType.number: {
+						const v = Number(value);
+						base.number = v;
+					}
+					case AnswerType.short:
+					case AnswerType.paragraph: {
+						base.string = value;
+						break;
+					}
+					default:
+						break;
+				}
+
+				return false as never;
+			})
+			.filter((v) => !!v),
+	});
+
+	await DataBase.appeals.create({
+		data: {
+			userid: user.userid,
+			guildid: guildId,
+			punishmentid: punishmentId,
+		},
+	});
+
+	const socket = io('ws://127.0.0.1:5174', {
+		auth: { code: SOCKET_TOKEN },
+		transports: ['websocket'],
+		autoConnect: true,
+	});
+	socket.connect();
+
+	socket.on('connect', () => {
+		socket.emit('message', {
+			type: 'appeal',
+			payload: { guildId, punishmentId, userId: user.userid },
+		});
+
+		socket.disconnect();
+	});
+
+	return json({ success: true });
 };
