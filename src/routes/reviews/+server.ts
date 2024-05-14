@@ -1,4 +1,4 @@
-import type { TopGGReview } from '$lib/scripts/types';
+import type { TopGGReview } from '@ayako/website/src/lib/scripts/types';
 import DataBase from '$lib/server/database.js';
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
