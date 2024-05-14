@@ -3,7 +3,7 @@
 	"version": "0.0.1",
 	"private": true,
 	"scripts": {
-		"start": "rm -r ./.svelte-kit && pnpm build && node ./build/index.js",
+		"start": "rm -r ./.svelte-kit && pnpm build && PORT=5174 node ./build/index.js",
 		"dev": "vite dev --port 5174",
 		"build": "vite build",
 		"preview": "vite preview --port 5174",
@@ -43,6 +43,8 @@
 		"@fortawesome/free-solid-svg-icons": "^6.5.2",
 		"@prisma/client": "^5.13.0",
 		"@sveltejs/adapter-node": "^5.0.1",
+		"@types/pg": "^8.11.6",
+		"@types/pg-connection-string": "^2.0.0",
 		"bits-ui": "^0.21.7",
 		"clsx": "^2.1.1",
 		"discord-api-types": "^0.37.83",
@@ -50,12 +52,13 @@
 		"express": "^4.19.2",
 		"formsnap": "^1.0.0",
 		"lucide-svelte": "^0.378.0",
-		"socket.io": "^4.7.5",
-		"socket.io-client": "^4.7.5",
+		"pg": "^8.11.5",
+		"pg-connection-string": "^2.6.4",
 		"svelte-fa": "^4.0.2",
 		"sveltekit-superforms": "^2.13.1",
 		"tailwind-merge": "^2.3.0",
 		"tailwind-variants": "^0.2.1",
+		"tweetnacl": "^1.0.3",
 		"zod": "^3.23.8"
 	},
 	"prisma": {
