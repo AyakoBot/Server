@@ -1,4 +1,4 @@
-import { ArtType as Type } from '$lib/scripts/types';
+import { ArtType as Type } from '@ayako/website/src/lib/scripts/types';
 import DataBase from '$lib/server/database.js';
 import { ArtType, Prisma } from '@prisma/client';
 import { json } from '@sveltejs/kit';
