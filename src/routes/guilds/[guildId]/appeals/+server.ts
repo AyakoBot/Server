@@ -1,9 +1,9 @@
-import { type AppealPunishment } from '$lib/scripts/types';
 import getPunishments from '$lib/scripts/util/getPunishments.js';
 import validateToken from '$lib/scripts/util/validateToken';
 import DataBase from '$lib/server/database.js';
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import type { AppealPunishment } from '@ayako/website/src/lib/scripts/types';
 
 export const GET: RequestHandler = async (req) => {
 	const token = await validateToken(req);
@@ -16,8 +16,14 @@ export const GET: RequestHandler = async (req) => {
 	});
 	if (!user) return error(401, 'Unauthorized');
 
+	const punishments = await getPunishments({ guildId, userId: user.userid });
+	const existing = await DataBase.appeals.findMany({
+		where: { userid: user.userid, guildid: guildId },
+	});
+
 	return json(
-		(await getPunishments({ guildId, userId: user.userid })).map((p) => ({
+		punishments.map((p) => ({
+			appealed: !!existing.find((e) => String(e.punishmentid) === String(p.uniquetimestamp)),
 			type: p.type,
 			reason: p.reason,
 			id: Number(p.uniquetimestamp),

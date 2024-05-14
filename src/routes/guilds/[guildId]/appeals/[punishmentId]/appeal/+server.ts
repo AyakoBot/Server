@@ -1,12 +1,11 @@
-import { type AppealPunishment } from '$lib/scripts/types';
+import { type AppealPunishment } from '@ayako/website/src/lib/scripts/types';
 import getPunishments from '$lib/scripts/util/getPunishments.js';
 import validateToken from '$lib/scripts/util/validateToken';
 import DataBase from '$lib/server/database.js';
+import PG from '$lib/server/pg.js';
 import { AnswerType, type appealquestions } from '@prisma/client';
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import io from 'socket.io-client';
-import { SOCKET_TOKEN } from '$env/static/private';
 
 export const GET: RequestHandler = async (req) => {
 	const token = await validateToken(req);
@@ -41,7 +40,7 @@ export const GET: RequestHandler = async (req) => {
 		}),
 	)[0];
 
-	return json({ punishment, settings, questions } as Returned);
+	return json({ punishment, questions } as Returned);
 };
 
 export type Returned = {
@@ -61,7 +60,13 @@ export const POST: RequestHandler = async (req) => {
 
 	const { guildId, punishmentId } = req.params;
 
-	const body = (await req.request.json().catch(() => 0)) as { [key: string]: string };
+	const existing = await DataBase.appeals.findUnique({
+		where: { punishmentid: punishmentId },
+		select: { punishmentid: true },
+	});
+	if (existing) return error(400, 'Appeal already exists');
+
+	const body = (await req.request.json().catch(() => ({}))) as { [key: string]: string };
 	if (typeof body !== 'object') return error(400, 'Body is not an object');
 
 	const keys = Object.keys(body);
@@ -188,21 +193,9 @@ export const POST: RequestHandler = async (req) => {
 		},
 	});
 
-	const socket = io('ws://127.0.0.1:5174', {
-		auth: { code: SOCKET_TOKEN },
-		transports: ['websocket'],
-		autoConnect: true,
-	});
-	socket.connect();
-
-	socket.on('connect', () => {
-		socket.emit('message', {
-			type: 'appeal',
-			payload: { guildId, punishmentId, userId: user.userid },
-		});
-
-		socket.disconnect();
-	});
+	await PG.query(
+		`NOTIFY appeal, '${JSON.stringify({ guildId, punishmentId, userId: user.userid }).replace(/'/g, "\\'")}'`,
+	);
 
 	return json({ success: true });
 };
