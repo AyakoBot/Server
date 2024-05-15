@@ -52,6 +52,7 @@
 		"express": "^4.19.2",
 		"formsnap": "^1.0.0",
 		"lucide-svelte": "^0.378.0",
+		"mime": "^4.0.3",
 		"pg": "^8.11.5",
 		"pg-connection-string": "^2.6.4",
 		"svelte-fa": "^4.0.2",
