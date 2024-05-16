@@ -5,6 +5,8 @@ import nacl from 'tweetnacl';
 import type { RequestHandler } from './$types';
 import pg from '$lib/server/pg.js';
 
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 export const POST: RequestHandler = async (req) => {
 	const signature = req.request.headers.get('X-Signature-Ed25519');
 	if (!signature) return error(401, 'Unauthorized');
@@ -30,7 +32,9 @@ export const POST: RequestHandler = async (req) => {
 	if (!isVerified) return error(401, 'Invalid signature');
 	if (body.type === InteractionType.Ping) return json({ type: 1 });
 
-	pg.query(`NOTIFY interaction, '${rawBody.replace(/'/g, '\\\'')}'`);
+	pg.query(`NOTIFY interaction, '${rawBody.replace(/'/g, "\\'")}'`);
 
-	return json({ success: true });
+	await sleep(10000);
+
+	return json({ type: 1 });
 };

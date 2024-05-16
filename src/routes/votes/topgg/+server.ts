@@ -11,7 +11,7 @@ export const POST: RequestHandler = async (req) => {
 	const exists = await DataBase.votesettings.count({ where: { token: body.authorization } });
 	if (!exists) return error(498, 'Invalid token');
 
-	await PG.query(`NOTIFY vote, '${JSON.stringify(body).replace(/'/g, "\\'")}'`, [body]);
+	await PG.query(`NOTIFY vote, '${JSON.stringify(body).replace(/'/g, "\\'")}'`);
 
 	return json({ success: true });
 };

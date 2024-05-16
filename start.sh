@@ -1,2 +1,2 @@
 cd /root/Ayako/packages/Server
-screen -dmS Svelte-Server -d -m pnpm dev
+screen -dmS Server -d -m pnpm start
