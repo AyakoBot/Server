@@ -7,7 +7,7 @@ import { PluginOption, defineConfig } from 'vite';
 const allowedOrigins = [
 	'https://dev.ayakobot.com',
 	'https://ayakobot.com',
-	'https://apiv2.ayakobot.com',
+	'https://api.ayakobot.com',
 ];
 
 /** @type {import('vite').Plugin} */
