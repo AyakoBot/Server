@@ -3,11 +3,12 @@ import { API } from '@discordjs/core';
 import { REST } from '@discordjs/rest';
 
 const rest = new REST({ authPrefix: 'Bot' });
-rest.setToken(BOT_TOKEN);
-const api = new API(rest);
 
 const self = {
-	API: api,
+	getAPI: () => {
+  rest.setToken(BOT_TOKEN);
+  return new API(rest);
+ },
 	userAPIs: new Map<string, (typeof API)['prototype']>(),
 	makeAPI: (token: string) => {
 		const existing = self.userAPIs.get(token);
