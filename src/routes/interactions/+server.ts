@@ -36,5 +36,5 @@ export const POST: RequestHandler = async (req) => {
 
 	await sleep(10000);
 
-	return json({ type: 1 });
+	return new Response(undefined, { status: 204 })
 };
