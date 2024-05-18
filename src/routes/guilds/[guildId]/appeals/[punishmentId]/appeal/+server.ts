@@ -149,6 +149,7 @@ export const POST: RequestHandler = async (req) => {
 				const base: Parameters<typeof DataBase.appealanswers.create>[0]['data'] = {
 					punishmentid: punishmentId,
 					type: q.answertype,
+					questionid: q.uniquetimestamp,
 				};
 
 				switch (q.answertype) {
