@@ -18,8 +18,5 @@ const viteServerConfig = (): PluginOption => ({
 });
 
 export default defineConfig({
-	plugins: [
-		sveltekit(),
-		viteServerConfig(),
-	],
+	plugins: [sveltekit(), viteServerConfig()],
 });
