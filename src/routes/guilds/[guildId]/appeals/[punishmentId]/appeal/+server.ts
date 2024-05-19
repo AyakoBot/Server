@@ -19,6 +19,11 @@ export const GET: RequestHandler = async (req) => {
 	const { guildId, punishmentId } = req.params;
 	if (!user) return error(401, 'Unauthorized');
 
+	const already = await DataBase.appeals.findUnique({
+		where: { punishmentid: punishmentId },
+	});
+	if (already) return json({ alreadyAppealed: true } as Returned);
+
 	const settings = await DataBase.appealsettings.findUnique({
 		where: { guildid: guildId, active: true },
 		select: { active: true },
@@ -40,13 +45,18 @@ export const GET: RequestHandler = async (req) => {
 		}),
 	)[0];
 
-	return json({ punishment, questions } as Returned);
+	return json({ punishment, questions, alreadyAppealed: false } as Returned);
 };
 
-export type Returned = {
-	punishment: AppealPunishment;
-	questions: appealquestions[];
-};
+export type Returned =
+	| {
+			punishment: AppealPunishment;
+			questions: appealquestions[];
+			alreadyAppealed: false;
+	  }
+	| {
+			alreadyAppealed: true;
+	  };
 
 export const POST: RequestHandler = async (req) => {
 	const token = await validateToken(req);
