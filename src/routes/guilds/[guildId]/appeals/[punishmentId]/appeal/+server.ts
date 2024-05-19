@@ -195,8 +195,6 @@ export const POST: RequestHandler = async (req) => {
 		},
 	});
 
-	console.log({ guildId, punishmentId, userId: user.userid });
-
 	await PG.query(
 		`NOTIFY appeal, '${JSON.stringify({ guildId, punishmentId, userId: user.userid }).replace(/'/g, "\\'")}'`,
 	);
