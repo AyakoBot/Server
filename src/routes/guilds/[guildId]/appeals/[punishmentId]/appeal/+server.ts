@@ -103,8 +103,8 @@ export const POST: RequestHandler = async (req) => {
 
 		switch (q.answertype) {
 			case AnswerType.boolean: {
-				if (value === 'false' && !q.required) return true;
-				if (value === 'true') return true;
+				if (['off', 'false'].includes(value) && !q.required) return true;
+				if (['on', 'true'].includes(value)) return true;
 				return false;
 			}
 			case AnswerType.single_choice:
@@ -154,8 +154,8 @@ export const POST: RequestHandler = async (req) => {
 
 				switch (q.answertype) {
 					case AnswerType.boolean: {
-						if (value === 'false') base.boolean = false;
-						if (value === 'true') base.boolean = true;
+						if (['off', 'false'].includes(value)) base.boolean = false;
+						if (['on', 'true'].includes(value)) base.boolean = true;
 						break;
 					}
 					case AnswerType.single_choice: {
@@ -171,6 +171,7 @@ export const POST: RequestHandler = async (req) => {
 					case AnswerType.number: {
 						const v = Number(value);
 						base.number = v;
+						break;
 					}
 					case AnswerType.short:
 					case AnswerType.paragraph: {
@@ -181,7 +182,7 @@ export const POST: RequestHandler = async (req) => {
 						break;
 				}
 
-				return false as never;
+				return base;
 			})
 			.filter((v) => !!v),
 	});
@@ -193,6 +194,8 @@ export const POST: RequestHandler = async (req) => {
 			punishmentid: punishmentId,
 		},
 	});
+
+	console.log({ guildId, punishmentId, userId: user.userid });
 
 	await PG.query(
 		`NOTIFY appeal, '${JSON.stringify({ guildId, punishmentId, userId: user.userid }).replace(/'/g, "\\'")}'`,
