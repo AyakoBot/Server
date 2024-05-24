@@ -3,7 +3,7 @@ import { error, json } from '@sveltejs/kit';
 import { InteractionType, type APIInteraction } from 'discord-api-types/v10';
 import nacl from 'tweetnacl';
 import type { RequestHandler } from './$types';
-import pg from '$lib/server/pg.js';
+import redis from '$lib/server/redis.js';
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -32,7 +32,7 @@ export const POST: RequestHandler = async (req) => {
 	if (!isVerified) return error(401, 'Invalid signature');
 	if (body.type === InteractionType.Ping) return json({ type: 1 });
 
-	pg.query(`NOTIFY interaction, '${rawBody.replace(/'/g, "\\'")}'`);
+	redis.publish('interaction', JSON.stringify(rawBody));
 
 	await sleep(10000);
 

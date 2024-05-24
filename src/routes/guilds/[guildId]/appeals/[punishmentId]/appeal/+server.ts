@@ -2,7 +2,7 @@ import { type AppealPunishment } from '@ayako/website/src/lib/scripts/types';
 import getPunishments from '$lib/scripts/util/getPunishments.js';
 import validateToken from '$lib/scripts/util/validateToken';
 import DataBase from '$lib/server/database.js';
-import PG from '$lib/server/pg.js';
+import redis from '$lib/server/redis.js';
 import { AnswerType, type appealquestions } from '@prisma/client';
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
@@ -205,9 +205,7 @@ export const POST: RequestHandler = async (req) => {
 		},
 	});
 
-	await PG.query(
-		`NOTIFY appeal, '${JSON.stringify({ guildId, punishmentId, userId: user.userid }).replace(/'/g, "\\'")}'`,
-	);
+ redis.publish('appeal', JSON.stringify({ guildId, punishmentId, userId: user.userid }))
 
 	return json({ success: true });
 };

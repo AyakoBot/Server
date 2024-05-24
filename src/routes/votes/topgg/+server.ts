@@ -1,6 +1,6 @@
 import type { RequestHandler } from './$types';
 import DataBase from '$lib/server/database.js';
-import PG from '$lib/server/pg.js';
+import redis from '$lib/server/redis.js';
 import { error, json } from '@sveltejs/kit';
 
 export const POST: RequestHandler = async (req) => {
@@ -11,7 +11,7 @@ export const POST: RequestHandler = async (req) => {
 	const exists = await DataBase.votesettings.count({ where: { token: body.authorization } });
 	if (!exists) return error(498, 'Invalid token');
 
-	await PG.query(`NOTIFY vote, '${JSON.stringify(body).replace(/'/g, "\\'")}'`);
+	redis.publish('vote', JSON.stringify(body));
 
 	return json({ success: true });
 };
