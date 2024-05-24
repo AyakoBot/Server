@@ -3,7 +3,7 @@ import type { RequestEvent } from '@sveltejs/kit';
 import API from '$lib/server/api.js';
 import getAvatarURL from './getAvatarURL';
 
-export default async (req: RequestEvent | string) => {
+export default async (req: RequestEvent | string, scope?: string) => {
 	const auth =
 		typeof req === 'string'
 			? req.replace('Bearer ', '')
@@ -19,7 +19,7 @@ export default async (req: RequestEvent | string) => {
 		const api = API.makeAPI(auth);
 
 		const user = await api.users.getCurrent().catch(() => undefined);
- if (!user) return null;
+		if (!user) return null;
 
 		DataBase.users
 			.upsert({
@@ -30,12 +30,14 @@ export default async (req: RequestEvent | string) => {
 					avatar: getAvatarURL(user),
 					username: user.global_name ?? user.username,
 					lastfetch: Date.now(),
+					scopes: scope?.split(/\s+/g),
 				},
 				update: {
 					accesstoken: auth,
 					avatar: getAvatarURL(user),
 					username: user.global_name ?? user.username,
 					lastfetch: Date.now(),
+					scopes: scope?.split(/\s+/g),
 				},
 			})
 			.then();

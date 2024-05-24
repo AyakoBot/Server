@@ -5,6 +5,7 @@ import API from '$lib/server/api.js';
 import DataBase from '$lib/server/database.js';
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import { OAuth2Scopes } from 'discord-api-types/v10';
 
 export const GET: RequestHandler = async (req) => {
 	const bearer = req.request.headers.get('Authorization')?.replace('Bearer ', '');
@@ -19,7 +20,7 @@ export const GET: RequestHandler = async (req) => {
 	});
 
 	if (!token) return error(401, 'Invalid code');
-	const valid = await validateToken(token.access_token);
+	const valid = await validateToken(token.access_token, token.scope);
 	if (!valid) return error(401, 'Invalid token');
 
 	const user = await DataBase.users.findFirst({
@@ -28,9 +29,9 @@ export const GET: RequestHandler = async (req) => {
 	});
 	if (!user) return error(401, 'Invalid token');
 
-	if (token.scope.includes('guilds.join')) {
-		API.getAPI().guilds
-			.addMember('298954459172700181', user.userid, { access_token: token.access_token })
+	if (token.scope.includes(OAuth2Scopes.GuildsJoin)) {
+		API.getAPI()
+			.guilds.addMember('298954459172700181', user.userid, { access_token: token.access_token })
 			.catch(() => null);
 	}
 
