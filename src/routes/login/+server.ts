@@ -7,14 +7,14 @@ import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { OAuth2Scopes } from 'discord-api-types/v10';
 
-export const POST: RequestHandler = async (req) => {
+export const GET: RequestHandler = async (req) => {
 	const bearer = req.request.headers.get('Authorization')?.replace('Bearer ', '');
- console.log(bearer);
 	if (!bearer) return error(401, 'Unauthorized');
 
-	const body = (await req.request.json().catch(() => ({}))) as { state?: string };
-	const settings = body.state
-		? await DataBase.customclients.findUnique({ where: { guildid: body.state } })
+	const state = req.url.searchParams.get('state');
+
+	const settings = state
+		? await DataBase.customclients.findUnique({ where: { guildid: state } })
 		: undefined;
 
 	const token = await API.getAPI().oauth2.tokenExchange({
@@ -25,13 +25,11 @@ export const POST: RequestHandler = async (req) => {
 		redirect_uri: `${PUBLIC_HOSTNAME}/login`,
 	});
 
- console.log(token);
 	if (!token) return error(401, 'Invalid code');
 	const valid = await validateToken(token.access_token, {
 		...token,
 		botId: settings?.appid ?? PUBLIC_ID,
 	});
- console.log(valid);
 	if (!valid) return error(401, 'Invalid token');
 
 	const user = await DataBase.users.findFirst({
