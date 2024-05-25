@@ -11,7 +11,7 @@ export const GET: RequestHandler = async (req) => {
 
 	const { guildId } = req.params;
 	const user = await DataBase.users.findFirst({
-		where: { accesstoken: token },
+		where: { tokens: { some: { accesstoken: token } } },
 		select: { userid: true },
 	});
 	if (!user) return error(401, 'Unauthorized');

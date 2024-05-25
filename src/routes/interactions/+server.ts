@@ -18,8 +18,9 @@ export const POST: RequestHandler = async (req) => {
 	const body = JSON.parse(rawBody) as APIInteraction;
 	if (!body || !('application_id' in body)) return error(401, 'Unauthorized');
 
-	const settings = await DataBase.guildsettings.findFirst({
+	const settings = await DataBase.customclients.findFirst({
 		where: { appid: body.application_id },
+		select: { publickey: true },
 	});
 	if (!settings || !settings.publickey) return error(401, 'Unauthorized');
 
@@ -36,5 +37,5 @@ export const POST: RequestHandler = async (req) => {
 
 	await sleep(10000);
 
-	return new Response(undefined, { status: 204 })
+	return new Response(undefined, { status: 204 });
 };

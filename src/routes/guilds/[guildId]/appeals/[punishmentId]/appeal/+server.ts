@@ -12,7 +12,7 @@ export const GET: RequestHandler = async (req) => {
 	if (!token) return error(403, 'Invalid or no token provided');
 
 	const user = await DataBase.users.findFirst({
-		where: { accesstoken: token },
+		where: { tokens: { some: { accesstoken: token } } },
 		select: { userid: true },
 	});
 
@@ -63,7 +63,7 @@ export const POST: RequestHandler = async (req) => {
 	if (!token) return error(403, 'Invalid or no token provided');
 
 	const user = await DataBase.users.findFirst({
-		where: { accesstoken: token },
+		where: { tokens: { some: { accesstoken: token } } },
 		select: { userid: true },
 	});
 	if (!user) return error(401, 'Unauthorized');
@@ -205,7 +205,7 @@ export const POST: RequestHandler = async (req) => {
 		},
 	});
 
- redis.publish('appeal', JSON.stringify({ guildId, punishmentId, userId: user.userid }))
+	redis.publish('appeal', JSON.stringify({ guildId, punishmentId, userId: user.userid }));
 
 	return json({ success: true });
 };

@@ -3,8 +3,12 @@ import type { RequestEvent } from '@sveltejs/kit';
 import API from '$lib/server/api.js';
 import getAvatarURL from './getAvatarURL';
 import type { RESTPostOAuth2AccessTokenResult } from 'discord-api-types/v10';
+import { PUBLIC_ID } from '$env/static/public';
 
-export default async (req: RequestEvent | string, token?: RESTPostOAuth2AccessTokenResult) => {
+export default async (
+	req: RequestEvent | string,
+	token?: RESTPostOAuth2AccessTokenResult & { botId: string },
+) => {
 	const auth =
 		typeof req === 'string'
 			? req.replace('Bearer ', '')
@@ -32,11 +36,12 @@ export default async (req: RequestEvent | string, token?: RESTPostOAuth2AccessTo
 					lastfetch: Date.now(),
 					tokens: {
 						connectOrCreate: {
-							where: { userid: user.id },
+							where: { userid_botid: { userid: user.id, botid: token?.botId ?? PUBLIC_ID } },
 							create: {
 								accesstoken: token?.access_token,
 								refreshtoken: token?.refresh_token,
 								expires: Number(token?.expires_in) * 1000 + Date.now(),
+								botid: token?.botId ?? PUBLIC_ID,
 								scopes: token?.scope.split(/\s+/g),
 							},
 						},
@@ -48,11 +53,12 @@ export default async (req: RequestEvent | string, token?: RESTPostOAuth2AccessTo
 					lastfetch: Date.now(),
 					tokens: {
 						upsert: {
-							where: { userid: user.id },
+							where: { userid_botid: { userid: user.id, botid: token?.botId ?? PUBLIC_ID } },
 							create: {
 								accesstoken: token?.access_token,
 								refreshtoken: token?.refresh_token,
 								expires: Number(token?.expires_in) * 1000 + Date.now(),
+								botid: token?.botId ?? PUBLIC_ID,
 								scopes: token?.scope.split(/\s+/g),
 							},
 							update: {
