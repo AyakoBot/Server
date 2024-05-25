@@ -26,7 +26,7 @@ export const GET: RequestHandler = async (req) => {
 	});
 
 	if (!token) return error(401, 'Invalid code');
-	const valid = await validateToken(token.access_token, {
+	const valid = await validateToken(undefined, {
 		...token,
 		botId: settings?.appid ?? PUBLIC_ID,
 	});

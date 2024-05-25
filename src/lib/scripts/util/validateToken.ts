@@ -5,25 +5,24 @@ import getAvatarURL from './getAvatarURL';
 import type { RESTPostOAuth2AccessTokenResult } from 'discord-api-types/v10';
 import { PUBLIC_ID } from '$env/static/public';
 
-export default async (
-	req: RequestEvent | string,
-	token?: RESTPostOAuth2AccessTokenResult & { botId: string },
+export default async <T extends RequestEvent | undefined>(
+	req: T,
+	token?: T extends undefined ? RESTPostOAuth2AccessTokenResult & { botId: string } : undefined,
 ) => {
-	const auth =
-		typeof req === 'string'
-			? req.replace('Bearer ', '')
-			: req.request.headers.get('Authorization')?.replace('Bearer ', '');
+	const auth = req
+		? req.request.headers.get('Authorization')?.replace('Bearer ', '')
+		: token?.access_token!;
 	if (!auth) return null;
 
 	const existing = await DataBase.users.findFirst({
-		where: { tokens: { some: { accesstoken: auth } } },
+		where: { tokens: { some: { accesstoken: token?.access_token } } },
 		select: { userid: true },
 	});
 
 	if (!existing) {
 		const api = API.makeAPI(auth);
 
-		const user = await api.users.getCurrent().catch(() => undefined);
+		const user = await api.users.getCurrent();
 		if (!user) return null;
 
 		DataBase.users
@@ -72,7 +71,7 @@ export default async (
 				},
 			})
 			.then();
-	} else API.makeAPI(auth);
+	} else API.makeAPI((typeof auth === 'boolean' ? token?.access_token : auth)!);
 
 	return auth;
 };
