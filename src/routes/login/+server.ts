@@ -12,7 +12,9 @@ export const POST: RequestHandler = async (req) => {
 	if (!bearer) return error(401, 'Unauthorized');
 
 	const body = (await req.request.json().catch(() => ({}))) as { state?: string };
-	const settings = await DataBase.customclients.findUnique({ where: { guildid: body.state } });
+	const settings = body.state
+		? await DataBase.customclients.findUnique({ where: { guildid: body.state } })
+		: undefined;
 
 	const token = await API.getAPI().oauth2.tokenExchange({
 		client_id: settings ? settings.appid ?? PUBLIC_ID : PUBLIC_ID,
