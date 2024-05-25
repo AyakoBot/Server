@@ -20,7 +20,7 @@ export const GET: RequestHandler = async (req) => {
 	});
 
 	if (!token) return error(401, 'Invalid code');
-	const valid = await validateToken(token.access_token, token.scope);
+	const valid = await validateToken(token.access_token);
 	if (!valid) return error(401, 'Invalid token');
 
 	const user = await DataBase.users.findFirst({
