@@ -2,8 +2,9 @@ import DataBase from '$lib/server/database.js';
 import type { RequestEvent } from '@sveltejs/kit';
 import API from '$lib/server/api.js';
 import getAvatarURL from './getAvatarURL';
+import type { RESTPostOAuth2AccessTokenResult } from 'discord-api-types/v10';
 
-export default async (req: RequestEvent | string) => {
+export default async (req: RequestEvent | string, token?: RESTPostOAuth2AccessTokenResult) => {
 	const auth =
 		typeof req === 'string'
 			? req.replace('Bearer ', '')
@@ -11,7 +12,7 @@ export default async (req: RequestEvent | string) => {
 	if (!auth) return null;
 
 	const existing = await DataBase.users.findFirst({
-		where: { accesstoken: auth },
+		where: { tokens: { some: { accesstoken: auth } } },
 		select: { userid: true },
 	});
 
@@ -26,16 +27,42 @@ export default async (req: RequestEvent | string) => {
 				where: { userid: user.id },
 				create: {
 					userid: user.id,
-					accesstoken: auth,
 					avatar: getAvatarURL(user),
 					username: user.global_name ?? user.username,
 					lastfetch: Date.now(),
+					tokens: {
+						connectOrCreate: {
+							where: { userid: user.id },
+							create: {
+								accesstoken: token?.access_token,
+								refreshtoken: token?.refresh_token,
+								expires: Number(token?.expires_in) * 1000 + Date.now(),
+								scopes: token?.scope.split(/\s+/g),
+							},
+						},
+					},
 				},
 				update: {
-					accesstoken: auth,
 					avatar: getAvatarURL(user),
 					username: user.global_name ?? user.username,
 					lastfetch: Date.now(),
+					tokens: {
+						upsert: {
+							where: { userid: user.id },
+							create: {
+								accesstoken: token?.access_token,
+								refreshtoken: token?.refresh_token,
+								expires: Number(token?.expires_in) * 1000 + Date.now(),
+								scopes: token?.scope.split(/\s+/g),
+							},
+							update: {
+								accesstoken: token?.access_token,
+								refreshtoken: token?.refresh_token,
+								expires: Number(token?.expires_in) * 1000 + Date.now(),
+								scopes: token?.scope.split(/\s+/g),
+							},
+						},
+					},
 				},
 			})
 			.then();
