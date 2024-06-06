@@ -164,7 +164,6 @@ const command = async (body: APIApplicationCommandInteraction) => {
 	});
 
 	const t = await addResponse.text();
-	console.log(t);
 
 	if (addResponse.ok) {
 		return json({
