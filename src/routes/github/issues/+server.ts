@@ -1,21 +1,17 @@
+import { GITHUB_ID, GITHUB_PUBKEY, GITHUB_TOKEN } from '$env/static/private';
+import type { APIApplicationCommandInteractionDataStringOption } from '@discordjs/core';
+import { Octokit } from '@octokit/rest';
 import { error, json } from '@sveltejs/kit';
 import {
-	ApplicationCommandOptionType,
 	InteractionType,
 	type APIApplicationCommandAutocompleteInteraction,
 	type APIApplicationCommandInteraction,
-	type APIApplicationCommandInteractionData,
 	type APIApplicationCommandInteractionDataOption,
 	type APIApplicationCommandOptionChoice,
-	type APIApplicationCommandOptionWithAutocompleteOrChoicesWrapper,
-	type APIApplicationCommandSubcommandGroupOption,
 	type APIInteraction,
 } from 'discord-api-types/v10';
 import nacl from 'tweetnacl';
 import type { RequestHandler } from './$types';
-import { GITHUB_PUBKEY, GITHUB_ID, GITHUB_TOKEN } from '$env/static/private';
-import { Octokit } from '@octokit/rest';
-import type { APIApplicationCommandInteractionDataStringOption } from '@discordjs/core';
 
 const octokit = new Octokit({ auth: GITHUB_TOKEN });
 
@@ -138,10 +134,52 @@ const command = async (body: APIApplicationCommandInteraction) => {
 		project: 1,
 	});
 
+	const projectId = 'PVT_kwDOB8Blfc4ATIz5';
+	const source = 'https://api.github.com/graphql';
+	const nodeId = res.data.node_id;
+	const query = `
+ mutation AddIssueToProject($projectId: ID!, $contentId: ID!) {
+     addProjectV2ItemById(input: {
+       contentId: $contentId
+       projectId: $projectId
+     }) {
+       item {
+         id
+       }
+     }
+   }
+`;
+	const auth = `Bearer ${GITHUB_TOKEN}`;
+
+	const addResponse = await fetch(source, {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: auth,
+		},
+		body: JSON.stringify({
+			query,
+			variables: { projectId, contentId: nodeId },
+		}),
+	});
+
+	const t = await addResponse.text();
+	console.log(t);
+
+	if (addResponse.ok) {
+		return json({
+			type: 4,
+			data: {
+				content: `<${res.data.html_url}>`,
+				flags: 64,
+			},
+		});
+	}
+
 	return json({
 		type: 4,
 		data: {
-			content: `<${res.data.html_url}>\n${commandOpts.find((o) => o.name === 'repo')?.value !== 'Ayako-v2' ? 'Careful; Issues in Repos that are not Ayako-v2 need to be added to the Project manually' : ''}`,
+			content: `<${res.data.html_url}>\n\nFailed to add issue to project.\n${addResponse.status} ${addResponse.statusText}\n${t}`,
 			flags: 64,
 		},
 	});
