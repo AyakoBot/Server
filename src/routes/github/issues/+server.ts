@@ -74,38 +74,18 @@ const autocomplete = (body: APIApplicationCommandAutocompleteInteraction) => {
 			}))
 			.filter((v) => v.value === [...new Set(v.value.split(/,\s*/g))].join(', '));
 
-	switch (repo.trim()) {
-		case 'Server':
-		case 'Ayako-v2':
-			return json({
-				type: 8,
-				data: {
-					choices: joinLabels([
-						{ name: 'enhancement', value: 'enhancement' },
-						{ name: 'bug', value: 'bug' },
-						{ name: '[Prio] Med', value: '[Prio] Med' },
-						{ name: '[Prio] High', value: '[Prio] High' },
-						{ name: '[Prio] Low', value: '[Prio] Low' },
-					]),
-				},
-			});
-		case 'Ayako':
-			return json({
-				type: 8,
-				data: {
-					choices: joinLabels([{ name: 'No labels exist yet', value: 'No labels exist yet' }]),
-				},
-			});
-		case 'Website':
-			return json({
-				type: 8,
-				data: {
-					choices: joinLabels([{ name: 'enhancement', value: 'enhancement' }]),
-				},
-			});
-		default:
-			return json({ choices: [] });
-	}
+	return json({
+		type: 8,
+		data: {
+			choices: joinLabels([
+				{ name: 'enhancement', value: 'enhancement' },
+				{ name: 'bug', value: 'bug' },
+				{ name: '[Prio] Med', value: '[Prio] Med' },
+				{ name: '[Prio] High', value: '[Prio] High' },
+				{ name: '[Prio] Low', value: '[Prio] Low' },
+			]),
+		},
+	});
 };
 
 const command = async (body: APIApplicationCommandInteraction) => {
@@ -169,8 +149,7 @@ const command = async (body: APIApplicationCommandInteraction) => {
 		return json({
 			type: 4,
 			data: {
-				content: `<${res.data.html_url}>`,
-				flags: 64,
+				content: `Issue created: <${res.data.html_url}>`,
 			},
 		});
 	}
@@ -178,8 +157,7 @@ const command = async (body: APIApplicationCommandInteraction) => {
 	return json({
 		type: 4,
 		data: {
-			content: `<${res.data.html_url}>\n\nFailed to add issue to project.\n${addResponse.status} ${addResponse.statusText}\n${t}`,
-			flags: 64,
+			content: `Issue created: <${res.data.html_url}>\n\nFailed to add issue to project.\n${addResponse.status} ${addResponse.statusText}\n${t}`,
 		},
 	});
 };
