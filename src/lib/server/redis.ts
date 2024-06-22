@@ -1,3 +1,3 @@
-import Redis from 'redis';
+import Redis from 'ioredis';
 
-export default await Redis.createClient().connect();
+export default new Redis();
