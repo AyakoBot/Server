@@ -16,6 +16,11 @@ export const GET: RequestHandler = async (req) => {
 	});
 	if (!user) return error(401, 'Unauthorized');
 
+	const appeals = await DataBase.appealsettings.findUnique({
+		where: { guildid: guildId, active: true },
+	});
+ if (!appeals) return error(404, 'Appeals are not enabled for this server');
+
 	const punishments = await getPunishments({ guildId, userId: user.userid });
 	const existing = await DataBase.appeals.findMany({
 		where: { userid: user.userid, guildid: guildId },
