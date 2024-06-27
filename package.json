@@ -2,6 +2,7 @@
 	"name": "@ayako/server",
 	"version": "0.0.1",
 	"private": true,
+ 	"packageManager": "pnpm@9.2.0",
 	"scripts": {
 		"start": "rm -r ./.svelte-kit && pnpm build && PORT=443 node ./build/index.js",
 		"dev": "vite dev --port 5174",
