@@ -6,7 +6,7 @@ export default async ({
 	userId,
 	punishmentId,
 }: {
-	guildId: string;
+	guildId: string | undefined;
 	userId: string;
 	punishmentId?: string;
 }) => {

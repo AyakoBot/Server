@@ -4,35 +4,42 @@ import type { RequestHandler } from './$types';
 import type { APIGuild, RESTGetAPICurrentUserGuildsResult } from 'discord-api-types/v10';
 import validateToken from '$lib/scripts/util/validateToken.js';
 import API from '$lib/server/api.js';
+import getPunishments from '$lib/scripts/util/getPunishments.js';
+import type { guilds } from '@prisma/client';
 
 export const GET: RequestHandler = async (req) => {
 	const token = await validateToken(req);
 	if (!token) return error(403, 'Invalid or no token provided');
 
-	const guilds = await API.userAPIs.get(token)!.users.getGuilds();
+	const api = API.makeAPI(token)!;
+	const user = await api.users.getCurrent();
+	const joinedGuilds = await api.users.getGuilds();
+	const punishGuilds = await getPunishments({ guildId: undefined, userId: user.id });
+	const guildIds = [
+		...new Set([...joinedGuilds.map((g) => g.id), ...punishGuilds.map((g) => g.guildid)]),
+	];
 
 	const enabledAppealIds = await DataBase.appealsettings.findMany({
-		where: { guildid: { in: guilds.map((g) => g.id) }, active: true },
+		where: { guildid: { in: guildIds }, active: true },
 		select: { guildid: true },
 	});
 
-	const botGuilds = await DataBase.guilds.findMany({
-		where: { guildid: { in: guilds.map((g) => g.id) } },
-		select: { guildid: true },
+	const dbGuilds = await DataBase.guilds.findMany({
+		where: { guildid: { in: guildIds } },
 	});
 
-	const enabledAppeals = enabledAppealIds
-		.map((g) => guilds.find((guild) => guild.id === g.guildid))
-		.filter((g): g is RESTGetAPICurrentUserGuildsResult[number] => !!g);
+	const appealEnabled = enabledAppealIds
+		.map((g) => dbGuilds.find((guild) => guild.guildid === g.guildid))
+		.filter((g): g is guilds => !!g)
+		.map(makeReturnGuild);
+
+	const otherMutuals = dbGuilds
+		.filter((g) => !enabledAppealIds.some((e) => e.guildid === g.guildid))
+		.map(makeReturnGuild);
 
 	return json({
-		appealEnabled: enabledAppeals.map((g) => makeReturnGuild(g)),
-		otherMutuals: botGuilds
-			.map((g) => guilds.find((guild) => guild.id === g.guildid))
-			.filter(
-				(g): g is RESTGetAPICurrentUserGuildsResult[number] => !!g && !enabledAppeals.includes(g),
-			)
-			.map((g) => makeReturnGuild(g)),
+		appealEnabled,
+		otherMutuals,
 	} as Returned);
 };
 
@@ -43,8 +50,9 @@ export type Returned = {
 	otherMutuals: ReturnedGuild;
 };
 
-const makeReturnGuild = (g: RESTGetAPICurrentUserGuildsResult[number]) => ({
-	id: g.id,
+const makeReturnGuild = (g: guilds) => ({
+	id: g.guildid,
 	name: g.name,
-	icon: g.icon,
+	icon: g.icon?.split(/\//g).at(-1)?.split(/\./g)[0],
+	banner: g.banner?.split(/\//g).at(-1)?.split(/\./g)[0],
 });
