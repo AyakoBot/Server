@@ -7,6 +7,7 @@ export const GET: RequestHandler = async (req) => {
 	const take = parseInt(req.url.searchParams.get('take') ?? '100');
 	const skip = parseInt(req.url.searchParams.get('skip') ?? '0');
 	const leastMemberCount = parseInt(req.url.searchParams.get('leastMemberCount') ?? '10000');
+	const q = req.url.searchParams.get('q') ?? '';
 
 	if (isNaN(skip)) return error(400, 'skip is NaN');
 	if (isNaN(take)) return error(400, 'take is NaN');
@@ -19,15 +20,16 @@ export const GET: RequestHandler = async (req) => {
 	const guilds = await DataBase.guilds.findMany({
 		where: {
 			membercount: { gte: leastMemberCount },
-			features: {
-				hasSome: [
-					GuildFeature.Discoverable,
-					GuildFeature.Community,
-					GuildFeature.Featurable,
-					GuildFeature.Partnered,
-					GuildFeature.VanityURL,
-				],
-			},
+			name: q.length ? { contains: q, mode: 'insensitive' } : undefined,
+			// features: {
+			// 	hasSome: [
+			//   GuildFeature.Discoverable,
+			//   GuildFeature.Community,
+			//   GuildFeature.Featurable,
+			//   GuildFeature.Partnered,
+			//   GuildFeature.VanityURL,
+			//  ],
+			// },
 		},
 		take,
 		skip,
