@@ -42,12 +42,12 @@ export const GET: RequestHandler = async (req) => {
 };
 
 export type Returned = {
-	xp: Number;
-	level: Number;
-	multiplier: Number;
+	xp: number;
+	level: number;
+	multiplier: number;
 	user: {
-		id: String;
-		name: String;
-		avatar: String;
+		id: string;
+		name: string;
+		avatar: string;
 	};
 }[];
