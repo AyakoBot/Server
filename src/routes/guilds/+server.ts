@@ -33,7 +33,7 @@ export const GET: RequestHandler = async (req) => {
 		},
 		take,
 		skip,
-		orderBy: { name: 'desc' },
+		orderBy: { membercount: 'desc' },
 		select: {
 			name: true,
 			banner: true,
