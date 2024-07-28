@@ -11,7 +11,12 @@ export const GET: RequestHandler = async (req) => {
 	if (!guild) return error(404, 'Guild not found');
 
 	return json({
-		memberCount: guild.membercount ?? 0,
-		presenceCount: guild.presencecount ?? 0,
-	});
+		memberCount: Number(guild.membercount) ?? 0,
+		presenceCount: Number(guild.presencecount) ?? 0,
+	} as Returned);
+};
+
+export type Returned = {
+	memberCount: number;
+	presenceCount: number;
 };
