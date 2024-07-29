@@ -23,7 +23,25 @@ export const GET: RequestHandler = async (req) => {
 
 	if (!guild) return error(404);
 
-	return json(guild);
+	return json({
+		banner: guild.banner,
+		features: guild.features,
+		id: guild.guildid,
+		icon: guild.icon,
+		invite: guild.invite,
+		memberCount: Number(guild.membercount),
+		name: guild.name,
+		presenceCount: Number(guild.presencecount),
+	} as Returned);
 };
 
-export type Returned = Omit<guilds, 'fetchat'>;
+export type Returned = {
+	banner: string | null;
+	features: string[];
+	id: string;
+	icon: string;
+	invite: string;
+	name: string;
+	memberCount: number;
+	presenceCount: number;
+};
