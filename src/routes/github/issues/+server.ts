@@ -89,7 +89,7 @@ const autocomplete = (body: APIApplicationCommandAutocompleteInteraction) => {
 };
 
 const command = async (body: APIApplicationCommandInteraction) => {
-	if (body.member?.user?.id !== '318453143476371456') {
+	if (body?.user?.id !== '318453143476371456' && body?.member?.user?.id !== '318453143476371456') {
 		return json({
 			type: 4,
 			data: { content: "Woah, who're you? This Command is not made for you :c ... Sorry!!" },
@@ -149,7 +149,7 @@ const command = async (body: APIApplicationCommandInteraction) => {
 		return json({
 			type: 4,
 			data: {
-				content: `Issue created: <${res.data.html_url}>`,
+				content: `Issue created: [${res.data.title}](<${res.data.html_url}>)`,
 			},
 		});
 	}
