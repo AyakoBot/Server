@@ -21,15 +21,15 @@ export const GET: RequestHandler = async (req) => {
 		where: {
 			membercount: { gte: leastMemberCount },
 			name: q.length ? { contains: q, mode: 'insensitive' } : undefined,
-			// features: {
-			// 	hasSome: [
-			//   GuildFeature.Discoverable,
-			//   GuildFeature.Community,
-			//   GuildFeature.Featurable,
-			//   GuildFeature.Partnered,
-			//   GuildFeature.VanityURL,
-			//  ],
-			// },
+			features: {
+				hasSome: [
+					GuildFeature.Discoverable,
+					GuildFeature.Community,
+					GuildFeature.Featurable,
+					GuildFeature.Partnered,
+					GuildFeature.VanityURL,
+				],
+			},
 		},
 		take,
 		skip,
