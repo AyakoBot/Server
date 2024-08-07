@@ -2,15 +2,26 @@ import DataBase from '$lib/server/database.js';
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { z } from 'zod';
+import makeReadableError from '$lib/scripts/util/makeReadableError';
 
 export const GET: RequestHandler = async (req) => {
-	const { guildId } = req.params;
+	const guildId = z
+		.string()
+		.regex(/\d{17,19}/gm, { message: 'Guild ID is not a snowflake' })
+		.or(z.string().regex(/^1$/gm, { message: 'Guild ID is not 1' }))
+		.safeParse(req.params.guildId);
+
+	if (!guildId.success) return error(400, makeReadableError(guildId.error));
+
 	const take = z
 		.number({ message: 'take is NaN' })
 		.max(1000, { message: 'take is gt 1000' })
 		.min(1, { message: 'take is lt 1' })
 		.int({ message: 'take is not an int' })
 		.safeParse(parseInt(req.url.searchParams.get('take') || '100'));
+
+	if (!take.success) return error(400, makeReadableError(take.error));
+
 	const skip = z
 		.number({ message: 'skip is NaN' })
 		.min(0, { message: 'skip is lt 0' })
@@ -20,11 +31,10 @@ export const GET: RequestHandler = async (req) => {
 		.finite({ message: 'skip is not finite' })
 		.safeParse(parseInt(req.url.searchParams.get('skip') || '0'));
 
-	if (!skip.success) return error(400, skip.error.message);
-	if (!take.success) return error(400, take.error.message);
+	if (!skip.success) return error(400, makeReadableError(skip.error));
 
 	const levels = await DataBase.level.findMany({
-		where: { guildid: guildId },
+		where: { guildid: guildId.data },
 		take: take.data,
 		orderBy: { xp: 'desc' },
 		skip: skip.data,

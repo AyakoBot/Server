@@ -10,7 +10,7 @@ const handle: Handle = ({ event }) => {
 	try {
 		return new Response(fs.readFileSync(path), {
 			status: 200,
-			headers: [['Content-Type', mime.getType(path) ?? ''], ['Cache-Control', 'pulic, max-age=604800']],
+			headers: [['Content-Type', mime.getType(path) || ''], ['Cache-Control', 'pulic, max-age=604800']],
 		});
 	} catch (e) {
 		console.log(e);

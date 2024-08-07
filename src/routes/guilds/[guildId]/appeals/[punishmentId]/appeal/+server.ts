@@ -22,7 +22,7 @@ export const GET: RequestHandler = async (req) => {
 	const already = await DataBase.appeals.findUnique({
 		where: { punishmentid: punishmentId },
 	});
-	if (already) return json({ alreadyAppealed: true } as Returned);
+	if (already) return json({ appealed: true } as Returned);
 
 	const settings = await DataBase.appealsettings.findUnique({
 		where: { guildid: guildId, active: true },
@@ -45,18 +45,16 @@ export const GET: RequestHandler = async (req) => {
 		}),
 	)[0];
 
-	return json({ punishment, questions, alreadyAppealed: false } as Returned);
+	return json({ punishment, questions, appealed: false } as Returned);
 };
 
 export type Returned =
 	| {
 			punishment: AppealPunishment;
 			questions: appealquestions[];
-			alreadyAppealed: false;
+			appealed: false;
 	  }
-	| {
-			alreadyAppealed: true;
-	  };
+	| { appealed: true };
 
 export const POST: RequestHandler = async (req) => {
 	const token = await validateToken(req);

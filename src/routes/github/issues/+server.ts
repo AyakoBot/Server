@@ -106,8 +106,8 @@ const command = async (body: APIApplicationCommandInteraction) => {
 
 	const res = await octokit.issues.create({
 		owner: 'AyakoBot',
-		repo: commandOpts.find((o) => o.name === 'repo')?.value ?? '',
-		title: commandOpts.find((o) => o.name === 'title')?.value ?? '',
+		repo: commandOpts.find((o) => o.name === 'repo')?.value || '',
+		title: commandOpts.find((o) => o.name === 'title')?.value || '',
 		assignee: 'Larsundso',
 		labels: commandOpts.find((o) => o.name === 'labels')?.value.split(/,\s*/g),
 		body: commandOpts.find((o) => o.name === 'desc')?.value ?? undefined,

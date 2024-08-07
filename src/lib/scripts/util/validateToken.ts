@@ -73,5 +73,5 @@ export default async <T extends RequestEvent | undefined>(
 			.then();
 	} else API.makeAPI((typeof auth === 'boolean' ? token?.access_token : auth)!);
 
-	return auth;
+	return auth.replace('Bearer ', '');
 };

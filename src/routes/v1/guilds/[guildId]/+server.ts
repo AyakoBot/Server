@@ -1,12 +1,19 @@
 import DataBase from '$lib/server/database.js';
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import makeReadableError from '$lib/scripts/util/makeReadableError';
+import { z } from 'zod';
 
 export const GET: RequestHandler = async (req) => {
-	const { guildId } = req.params;
+	const guildId = z
+		.string()
+		.regex(/\d{17,19}/gm, { message: 'Guild ID is not a snowflake' })
+		.safeParse(req.params.guildId);
+
+	if (!guildId.success) return error(400, makeReadableError(guildId.error));
 
 	const guild = await DataBase.guilds.findUnique({
-		where: { guildid: guildId },
+		where: { guildid: guildId.data },
 		select: {
 			banner: true,
 			features: true,

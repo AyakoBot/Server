@@ -54,7 +54,7 @@ const updateReviews = async () => {
 		where: {
 			userid: {
 				in: newReviews
-					.map((r) => r.poster.avatar.match(/\d{17,21}/gm)?.[0])
+					.map((r) => r.poster.avatar.match(/\d{17,19}/gm)?.[0])
 					.filter((s): s is string => !!s),
 			},
 		},

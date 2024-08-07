@@ -5,17 +5,11 @@ Allow: /artworks
 Allow: /contributers
 Allow: /features
 Allow: /stats
-Disallow: /stats
+Disallow: /v1
 Disallow: /coffee
-Disallow: /@me/
 Disallow: /interactions
 Disallow: /login
 Disallow: /topggvotes
-Disallow: /votes/
-Disallow: /guilds/`.trim(),
-		{
-			headers: {
-				'Content-Type': 'text/plain',
-			},
-		},
+Disallow: /votes/`.trim(),
+		{ headers: { 'Content-Type': 'text/plain' } },
 	);
