@@ -4,6 +4,7 @@ import DataBase from '$lib/server/database.js';
 import redis from '$lib/server/redis.js';
 import { error, json } from '@sveltejs/kit';
 import { z } from 'zod';
+import makeReadableError from '$lib/scripts/util/makeReadableError.js';
 
 const vote = z.object({
 	bot: z
@@ -13,13 +14,13 @@ const vote = z.object({
 		.string({ message: 'user is not snowflake' })
 		.regex(/^\d{17,19}$/, { message: 'user is not snowflake' }),
 	type: z.string().regex(/^(test|upvote)$/gm),
-	isWeekend: z.boolean(),
+	isWeekend: z.boolean().optional(),
 	query: z.string().optional(),
 });
 
 export const POST: RequestHandler = async (req) => {
 	const payload = vote.safeParse(await req.request.json().catch(() => ({})));
-	if (!payload.success) return error(400, payload.error.message);
+	if (!payload.success) return error(400, makeReadableError(payload.error));
 
 	const parsed: TopGGVote = {
 		...payload.data,
@@ -31,7 +32,7 @@ export const POST: RequestHandler = async (req) => {
 	const exists = await DataBase.votesettings.count({ where: { token: parsed.authorization } });
 	if (!exists) return error(498, 'Invalid token');
 
-	redis.publish('vote', JSON.stringify(payload));
+	redis.publish('vote', JSON.stringify(parsed));
 
 	return json({ success: true });
 };
