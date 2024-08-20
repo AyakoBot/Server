@@ -10,5 +10,18 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	event.url = new URL(event.url.href.replace('/api/', '/'));
 
-	return resolve(event);
+	if (event.request.method === 'POST') {
+		return new Response(null, {
+			headers: {
+				'Access-Control-Allow-Origin': '*',
+				'Access-Control-Allow-Methods': '*',
+				'Cross-Origin-Opener-Policy': 'unsafe-none',
+				'Cross-Origin-Embedder-Policy': 'unsafe-none',
+			},
+		});
+	}
+
+	const response = await resolve(event);
+	response.headers.append('Access-Control-Allow-Origin', '*');
+	return response;
 };
