@@ -10,7 +10,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	event.url = new URL(event.url.href.replace('/api/', '/'));
 
-	if (event.request.method === 'POST') {
+	if (event.request.method === 'OPTIONS') {
 		return new Response(null, {
 			headers: {
 				'Access-Control-Allow-Origin': '*',
