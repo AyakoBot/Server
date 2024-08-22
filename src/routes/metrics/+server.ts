@@ -8,7 +8,7 @@ export const GET: RequestHandler = async (req) => {
 	if (!auth) return error(401);
 	if (auth.replace('Bearer ', '') !== METRICS_SECRET) return error(403);
 
-	new Response(mergeMetrics(Object.values(await getAll())), {
+	return new Response(mergeMetrics(Object.values(await getAll())), {
 		headers: { 'Content-Type': 'text/plain; version=0.0.4; charset=utf-8' },
 	});
 }
