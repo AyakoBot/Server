@@ -11,24 +11,6 @@ export const GET: RequestHandler = async (req) => {
 	return new Response(mergeMetrics(Object.values(await getAll())), {
 		headers: { 'Content-Type': 'text/plain; version=0.0.4; charset=utf-8' },
 	});
-}
-
-export const POST: RequestHandler = async (req) => {
-	const auth = req.request.headers.get('authorization');
-	if (!auth) return error(401);
-	if (auth !== METRICS_SECRET) return error(403);
-
-	const { instanceId, metrics } = (await req.request.json()) as {
-		instanceId: string;
-		metrics: string;
-	};
-
-	if (!instanceId) return error(400, 'Missing instanceId');
-	if (!metrics) return error(400, 'Missing metrics');
-
-	await Redis.set(`metrics:${instanceId}`, metrics);
-
-	return new Response(undefined, { status: 204 });
 };
 
 const getAll = async () => {
