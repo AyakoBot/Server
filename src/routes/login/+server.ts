@@ -1,4 +1,4 @@
-import { SECRET } from '$env/static/private';
+import { BOT_SECRET } from '$env/static/private';
 import { PUBLIC_HOSTNAME, PUBLIC_ID } from '$env/static/public';
 import validateToken from '$lib/scripts/util/validateToken';
 import API from '$lib/server/api.js';
@@ -19,7 +19,7 @@ export const GET: RequestHandler = async (req) => {
 
 	const token = await API.getAPI().oauth2.tokenExchange({
 		client_id: settings ? settings.appid ?? PUBLIC_ID : PUBLIC_ID,
-		client_secret: settings ? settings.secret ?? SECRET : SECRET,
+		client_secret: settings ? settings.secret ?? BOT_SECRET : BOT_SECRET,
 		grant_type: 'authorization_code',
 		code: bearer,
 		redirect_uri: `${PUBLIC_HOSTNAME}/login`,

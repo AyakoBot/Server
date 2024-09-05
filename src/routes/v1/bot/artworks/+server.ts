@@ -1,5 +1,5 @@
 import DataBase from '$lib/server/database.js';
-import { ArtType as Type } from '@ayako/website/src/lib/scripts/types';
+import { ArtType as Type } from '@ayako/website/src/lib/scripts/types.js';
 import { ArtType, Prisma } from '@prisma/client';
 import { error, json } from '@sveltejs/kit';
 import { z } from 'zod';

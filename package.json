@@ -12,7 +12,7 @@
 		"postinstall": "pnpx prisma generate",
 		"lint": "prettier --check . && eslint .",
 		"preview": "vite preview --port 5174",
-		"start": "rm -r ./.svelte-kit && pnpm build && PORT=443 node ./build/index.js"
+		"start": "PORT=443 node ./build/index.js"
 	},
 	"dependencies": {
 		"@discordjs/core": "^2.0.0",

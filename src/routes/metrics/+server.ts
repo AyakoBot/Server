@@ -1,12 +1,12 @@
 import { text, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { METRICS_SECRET } from '$env/static/private';
+import { METRICS_TOKEN } from '$env/static/private';
 import Redis from '$lib/server/redis.js';
 
 export const GET: RequestHandler = async (req) => {
 	const auth = req.request.headers.get('authorization');
 	if (!auth) return error(401);
-	if (auth.replace('Bearer ', '') !== METRICS_SECRET) return error(403);
+	if (auth.replace('Bearer ', '') !== METRICS_TOKEN) return error(403);
 
 	return new Response(mergeMetrics(Object.values(await getAll())), {
 		headers: { 'Content-Type': 'text/plain; version=0.0.4; charset=utf-8' },

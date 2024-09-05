@@ -1,9 +1,11 @@
-import { PUBLIC_CDN } from '$env/static/public';
+import { PUBLIC_CDN, PUBLIC_ID } from '$env/static/public';
+import { GITHUB_ID } from '$env/static/private';
 import cdn from '$lib/server/cdn';
 import { type Handle } from '@sveltejs/kit';
 
 /** @type {import('@sveltejs/kit').Handle} */
 export const handle: Handle = async ({ event, resolve }) => {
+	console.log(event.request.headers);
 	if (event.url.href.startsWith(PUBLIC_CDN)) {
 		return cdn({ event, resolve });
 	}
