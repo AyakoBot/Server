@@ -17,9 +17,12 @@ RUN pnpm install
 
 WORKDIR /app/apps/Website
 RUN pnpm link ../../packages/Server
+COPY ./apps/Website/.env.example /app/apps/Website/.env
 RUN pnpm build
 
 WORKDIR /app/packages/Server
 RUN pnpm link ../../apps/Website
+COPY ./.env /app/packages/Server/.env
 RUN pnpm build
-COPY ./packages/Bot/.env /app/packages/Bot/.env.template
+
+CMD ["pnpm", "start"]

@@ -5,7 +5,7 @@ import Redis from '$lib/server/redis.js';
 
 export const GET: RequestHandler = async (req) => {
 	const auth = req.request.headers.get('authorization');
-	if (!auth) return error(401);
+ if (!auth) return error(401);
 	if (auth.replace('Bearer ', '') !== METRICS_TOKEN) return error(403);
 
 	return new Response(mergeMetrics(Object.values(await getAll())), {

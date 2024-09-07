@@ -14,7 +14,7 @@ const self = {
 		const existing = self.userAPIs.get(token);
 		if (existing) return existing;
 
-		const rest = new REST({ authPrefix: 'Bearer', api: 'http://127.0.0.1:8080/api' });
+		const rest = new REST({ authPrefix: 'Bearer', api: 'http://nirn:8080/api' });
 		const api = new API(rest.setToken(token));
 
 		self.userAPIs.set(token, api);

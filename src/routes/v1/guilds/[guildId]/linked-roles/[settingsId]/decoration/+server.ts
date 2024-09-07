@@ -42,7 +42,7 @@ export const GET: RequestHandler = async (req) => {
 			}),
 		);
 
-	const rest = new REST({ api: 'http://127.0.0.1:8080/api', authPrefix: 'Bot' });
+	const rest = new REST({ api: 'http://nirn:8080/api', authPrefix: 'Bot' });
 	const botAPI = new API(rest.setToken(settings.botToken));
 	const tokens = await botAPI.oauth2.tokenExchange({
 		client_id: settings.botId,
