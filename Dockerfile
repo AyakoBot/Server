@@ -12,17 +12,14 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 ENV PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig
-COPY . .
+COPY . /app
 RUN pnpm install
 
 WORKDIR /app/apps/Website
-RUN pnpm link ../../packages/Server
-COPY ./apps/Website/.env.example /app/apps/Website/.env
+RUN pnpm link /app/packages/Server
 RUN pnpm build
 
 WORKDIR /app/packages/Server
 RUN pnpm link ../../apps/Website
-COPY ./.env /app/packages/Server/.env
+COPY ../.env /app/packages/Server/.env
 RUN pnpm build
-
-CMD ["pnpm", "start"]
