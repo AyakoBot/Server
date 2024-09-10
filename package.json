@@ -7,7 +7,7 @@
 		"build": "pnpx prisma generate && vite build",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-		"dev": "vite dev --port 443",
+		"dev": "vite dev --port 5173",
 		"format": "prettier --write .",
 		"lint": "prettier --check . && eslint .",
 		"preview": "vite preview --port 5174",
