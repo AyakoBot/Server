@@ -145,7 +145,7 @@ const command = async (body: APIApplicationCommandInteraction) => {
 
 	const t = await addResponse.text();
 
-	if (addResponse.ok) {
+	if (!t.includes("errors")) {
 		return json({
 			type: 4,
 			data: {
