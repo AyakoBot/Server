@@ -7,8 +7,14 @@ import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async (req) => {
 	const params = req.url.searchParams;
-	const query = z.string().optional().safeParse(params?.get('q')?.toLowerCase());
-	const type = z.string().optional().safeParse(params?.get('type'));
+	const query = z
+		.string()
+		.optional()
+		.safeParse(params?.get('q')?.toLowerCase() || undefined);
+	const type = z
+		.string()
+		.optional()
+		.safeParse(params?.get('type')?.toLowerCase() || undefined);
 
 	if (!query.success) return error(400, 'Invalid query');
 	if (!type.success) return error(400, 'Invalid type');

@@ -45,7 +45,7 @@ export const POST: RequestHandler = async (req) => {
 		punishmentId,
 		userId: user.userid,
 	});
-	if (!punishments.length) return error(400, 'Unknown punishment ID');
+	if (!punishments.length) return error(400, 'Unknown punishment Id');
 	const [punishment] = punishments;
 
 	const questions = await DataBase.appealquestions.findMany({
