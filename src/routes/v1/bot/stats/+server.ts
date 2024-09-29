@@ -7,12 +7,16 @@ export const GET: RequestHandler = async () => {
 	if (!count) return error(500);
 
 	return json({
-		guildCount: Number(count?.guildCount),
-		userCount: Number(count?.allUsers),
+		guildCount: Number(count.guildCount),
+		userCount: Number(count.allUsers),
+		guildInstallCount: Number(count.guildCount),
+		userInstallCount: Number(count.userInstalls),
 	} as Returned);
 };
 
 export type Returned = {
 	guildCount: number;
 	userCount: number;
+	guildInstallCount: number;
+	userInstallCount: number;
 };
