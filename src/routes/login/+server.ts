@@ -18,8 +18,8 @@ export const GET: RequestHandler = async (req) => {
 		: undefined;
 
 	const token = await API.getAPI().oauth2.tokenExchange({
-		client_id: settings ? settings.appid ?? PUBLIC_ID : PUBLIC_ID,
-		client_secret: settings ? settings.secret ?? BOT_SECRET : BOT_SECRET,
+		client_id: settings ? (settings.appid ?? PUBLIC_ID) : PUBLIC_ID,
+		client_secret: settings ? (settings.secret ?? BOT_SECRET) : BOT_SECRET,
 		grant_type: 'authorization_code',
 		code: bearer,
 		redirect_uri: `${PUBLIC_HOSTNAME}/login`,
