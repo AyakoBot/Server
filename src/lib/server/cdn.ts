@@ -11,7 +11,7 @@ const handle: Handle = ({ event }) => {
 			status: 200,
 			headers: [
 				['Content-Type', mime.getType(path) || ''],
-				['Cache-Control', 'pulic, max-age=604800'],
+				['Cache-Control', `pulic, max-age=${path.includes('antivirus') ? 0 : 604800}`],
 			],
 		});
 	} catch (e) {
