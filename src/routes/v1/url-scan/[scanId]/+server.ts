@@ -16,7 +16,7 @@ export const GET: RequestHandler = async (req) => {
 	if (urlUtil.has('denylisted', url)) return new Response(null, { status: 204 });
 	if (urlUtil.has('badLinks', url)) return new Response(null, { status: 204 });
 
-	return new Response(null, { status: 412 });
+	return new Response(null, { status: 409 });
 };
 
 const checkIsValid = (id: string) => {
