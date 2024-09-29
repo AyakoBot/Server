@@ -6,7 +6,7 @@ import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async (req) => {
 	const token = await validateToken(req);
-	if (!token) return error(403, 'Invalid or no token provided');
+	if (!token) return error(401, 'Invalid or no token provided');
 
 	const user = await DataBase.users.findFirst({
 		where: { tokens: { some: { accesstoken: token } } },
