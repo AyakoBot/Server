@@ -9,14 +9,14 @@ export const GET: RequestHandler = async (req) => {
 
 	const urlScan = await DataBase.urlScans.findUnique({ where: { id } });
 	if (!urlScan) return new Response(null, { status: 404 });
-	if (!urlScan.done) return new Response(null, { status: 425 });
+	if (!urlScan.done) return new Response(null, { status: 409 });
 
 	const { url } = urlScan;
 	if (urlUtil.has('allowlisted', url)) return new Response(null, { status: 202 });
 	if (urlUtil.has('denylisted', url)) return new Response(null, { status: 204 });
 	if (urlUtil.has('badLinks', url)) return new Response(null, { status: 204 });
 
-	return new Response(null, { status: 409 });
+	return new Response(null, { status: 412 });
 };
 
 const checkIsValid = (id: string) => {
