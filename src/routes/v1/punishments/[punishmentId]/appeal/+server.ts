@@ -158,6 +158,7 @@ const checkAnswerValid = (q: appealquestions, value: string) => {
 		case AnswerType.short:
 		case AnswerType.paragraph: {
 			if (q.required && !value.length) return false;
+   if (value.length > 2000) return false;
 			return true;
 		}
 		case AnswerType.text:
