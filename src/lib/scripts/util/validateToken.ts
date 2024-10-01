@@ -1,9 +1,7 @@
+import API from '$lib/server/api.js';
 import DataBase from '$lib/server/database.js';
 import type { RequestEvent } from '@sveltejs/kit';
-import API from '$lib/server/api.js';
-import getAvatarURL from './getAvatarURL';
 import type { RESTPostOAuth2AccessTokenResult } from 'discord-api-types/v10';
-import { PUBLIC_ID } from '$env/static/public';
 
 /**
  * Validates the authorization token from the request or provided token.
@@ -15,7 +13,7 @@ import { PUBLIC_ID } from '$env/static/public';
  */
 export default async <T extends RequestEvent | undefined>(
 	req: T,
-	token?: T extends undefined ? RESTPostOAuth2AccessTokenResult & { botId: string } : undefined,
+	token?: T extends undefined ? RESTPostOAuth2AccessTokenResult : undefined,
 ) => {
 	const authHeader = req
 		? req.request.headers.get('Authorization')
@@ -43,98 +41,29 @@ export default async <T extends RequestEvent | undefined>(
 export const handleBot = async (auth: string) => {
 	const user = await DataBase.users.findFirst({ where: { apiToken: auth } });
 
-	return user ? auth : undefined;
+	return user ? auth : null;
 };
 
 /**
  * Handles the Bearer token authentication process.
  *
- * @template T - A type that extends `RequestEvent` or `undefined`.
+ * @template T - A type that extends `RequestEvent` or is `undefined`.
  *
- * @param {string} auth - The authentication token.
- * @param {T extends undefined ? RESTPostOAuth2AccessTokenResult & { botId: string } : undefined} [token] - The OAuth2 access token result with bot ID if `T` is `undefined`.
+ * @param auth - The authentication string, which can be a Bearer token or a boolean.
+ * @param token - The OAuth2 access token result if `T` is `undefined`.
  *
- * @returns {Promise<string | null>} - Returns the authentication token without 'Bearer ' prefix if successful, otherwise returns `null`.
- *
- * This function performs the following steps:
- * 1. Checks if the provided `auth` token exists in the database.
- * 2. If the token exists, it returns the `auth` token.
- * 3. If the token does not exist, it checks if the provided `token` exists in the database.
- * 4. If the `token` exists, it makes an API call and returns the `auth` token without the 'Bearer ' prefix.
- * 5. If the `token` does not exist, it makes an API call to get the current user.
- * 6. If the user is found, it upserts the user data and tokens in the database.
- * 7. Returns the `auth` token without the 'Bearer ' prefix.
+ * @returns A promise that resolves to the user ID if the token is valid, otherwise `null`.
  */
 export const handleBearer = async <T extends RequestEvent | undefined>(
 	auth: string,
-	token?: T extends undefined ? RESTPostOAuth2AccessTokenResult & { botId: string } : undefined,
+	token?: T extends undefined ? RESTPostOAuth2AccessTokenResult : undefined,
 ) => {
-	const userToken = await DataBase.users.findFirst({
-		where: { apiToken: auth },
-	});
-	if (userToken) return auth;
-
 	const existing = await DataBase.users.findFirst({
-		where: { tokens: { some: { accesstoken: token?.access_token } } },
+		where: { tokens: { some: { accesstoken: token?.access_token || auth } } },
 		select: { userid: true },
 	});
+	if (!existing) return null;
 
-	if (existing) {
-		API.makeAPI((typeof auth === 'boolean' ? token?.access_token : auth)!);
-		return auth.replace('Bearer ', '');
-	}
-
-	const api = API.makeAPI(auth);
-
-	const user = await api.users.getCurrent();
-	if (!user) return null;
-
-	DataBase.users
-		.upsert({
-			where: { userid: user.id },
-			create: {
-				userid: user.id,
-				avatar: getAvatarURL(user),
-				username: user.global_name ?? user.username,
-				lastfetch: Date.now(),
-				tokens: {
-					connectOrCreate: {
-						where: { userid_botid: { userid: user.id, botid: token?.botId ?? PUBLIC_ID } },
-						create: {
-							accesstoken: token?.access_token,
-							refreshtoken: token?.refresh_token,
-							expires: Number(token?.expires_in) * 1000 + Date.now(),
-							botid: token?.botId ?? PUBLIC_ID,
-							scopes: token?.scope.split(/\s+/g),
-						},
-					},
-				},
-			},
-			update: {
-				avatar: getAvatarURL(user),
-				username: user.global_name ?? user.username,
-				lastfetch: Date.now(),
-				tokens: {
-					upsert: {
-						where: { userid_botid: { userid: user.id, botid: token?.botId ?? PUBLIC_ID } },
-						create: {
-							accesstoken: token?.access_token,
-							refreshtoken: token?.refresh_token,
-							expires: Number(token?.expires_in) * 1000 + Date.now(),
-							botid: token?.botId ?? PUBLIC_ID,
-							scopes: token?.scope.split(/\s+/g),
-						},
-						update: {
-							accesstoken: token?.access_token,
-							refreshtoken: token?.refresh_token,
-							expires: Number(token?.expires_in) * 1000 + Date.now(),
-							scopes: token?.scope.split(/\s+/g),
-						},
-					},
-				},
-			},
-		})
-		.then();
-
+	API.makeAPI((typeof auth === 'boolean' ? token?.access_token : auth)!);
 	return auth.replace('Bearer ', '');
 };

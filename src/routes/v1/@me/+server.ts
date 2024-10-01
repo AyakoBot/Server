@@ -1,23 +1,21 @@
+import getUser, { AuthTypes } from '$lib/scripts/util/getUser';
 import validateToken from '$lib/scripts/util/validateToken.js';
-import API from '$lib/server/api.js';
-import DataBase from '$lib/server/database.js';
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import getAvatarURL from '$lib/scripts/util/getAvatarURL';
 
 export const GET: RequestHandler = async (req) => {
 	const token = await validateToken(req);
 	if (!token) return error(401, 'Invalid or no token provided');
 
-	const user = await DataBase.users.findFirst({
-		where: { tokens: { some: { accesstoken: token } } },
-	});
- if (!user) return error(401, 'Unauthorized');
+	const user = await getUser(token, [AuthTypes.Bearer]);
+	if (user instanceof Response) return user;
 
 	return json({
-		id: user?.userid,
-		name: user?.username,
-		avatar: user?.avatar,
-		socials: user?.socials.map((s, i) => ({ type: user.socialstype[i], url: s })),
-		votereminders: user?.votereminders,
+		id: user.userid,
+		name: user.username,
+		avatar: getAvatarURL({ discriminator: 0, avatar: user.avatar, id: user.userid }),
+		socials: user.socials.map((s, i) => ({ type: user.socialstype[i], url: s })),
+		votereminders: user.votereminders,
 	});
 };

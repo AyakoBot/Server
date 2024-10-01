@@ -1,5 +1,5 @@
-import { json, error } from '@sveltejs/kit';
 import DataBase from '$lib/server/database.js';
+import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async () => {

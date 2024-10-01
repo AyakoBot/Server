@@ -4,17 +4,15 @@ import DataBase from '$lib/server/database.js';
 import redis from '$lib/server/redis.js';
 import { AnswerType, type appealquestions } from '@prisma/client';
 import { error } from '@sveltejs/kit';
+import getUser, { AuthTypes } from '$lib/scripts/util/getUser';
 import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async (req) => {
 	const token = await validateToken(req);
 	if (!token) return error(403, 'Invalid or no token provided');
 
-	const user = await DataBase.users.findFirst({
-		where: { tokens: { some: { accesstoken: token } } },
-		select: { userid: true },
-	});
-	if (!user) return error(401, 'Unauthorized');
+	const user = await getUser(token, [AuthTypes.Bot, AuthTypes.Bearer]);
+	if (user instanceof Response) return user;
 
 	const { punishmentId } = req.params;
 
@@ -158,7 +156,7 @@ const checkAnswerValid = (q: appealquestions, value: string) => {
 		case AnswerType.short:
 		case AnswerType.paragraph: {
 			if (q.required && !value.length) return false;
-   if (value.length > 2000) return false;
+			if (value.length > 2000) return false;
 			return true;
 		}
 		case AnswerType.text:

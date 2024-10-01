@@ -1,9 +1,9 @@
 import makeReadableError from '$lib/scripts/util/makeReadableError';
+import validateToken from '$lib/scripts/util/validateToken';
 import DataBase from '$lib/server/database.js';
 import urlUtil, { cleanURL, scanningQueue, scanURL } from '$lib/server/url-scan/index.js';
 import { error, json } from '@sveltejs/kit';
 import { randomUUID } from 'crypto';
-import validateToken from 'src/lib/scripts/util/validateToken';
 import { z } from 'zod';
 import type { RequestHandler } from './$types';
 

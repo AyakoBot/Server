@@ -1,7 +1,7 @@
-import { text, error } from '@sveltejs/kit';
-import type { RequestHandler } from './$types';
 import { METRICS_TOKEN } from '$env/static/private';
 import Redis from '$lib/server/redis.js';
+import { error } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async (req) => {
 	const auth = req.request.headers.get('authorization');

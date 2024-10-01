@@ -1,8 +1,8 @@
+import makeReadableError from '$lib/scripts/util/makeReadableError';
 import DataBase from '$lib/server/database.js';
 import { error, json } from '@sveltejs/kit';
-import type { RequestHandler } from './$types';
 import { z } from 'zod';
-import makeReadableError from '$lib/scripts/util/makeReadableError';
+import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async (req) => {
 	const guildId = z

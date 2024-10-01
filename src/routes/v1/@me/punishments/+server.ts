@@ -1,11 +1,12 @@
 import getPunishments from '$lib/scripts/util/getPunishments.js';
+import getUser, { AuthTypes } from '$lib/scripts/util/getUser';
+import makeReadableError from '$lib/scripts/util/makeReadableError';
 import validateToken from '$lib/scripts/util/validateToken';
 import DataBase from '$lib/server/database.js';
-import { error, json } from '@sveltejs/kit';
-import type { RequestHandler } from './$types';
 import type { AppealPunishment } from '@ayako/website/src/lib/scripts/types';
+import { error, json } from '@sveltejs/kit';
 import { z } from 'zod';
-import makeReadableError from '$lib/scripts/util/makeReadableError';
+import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async (req) => {
 	const token = await validateToken(req);
@@ -20,11 +21,8 @@ export const GET: RequestHandler = async (req) => {
 		: z.string().optional().safeParse(undefined);
 	if (!guildId.success) return error(400, makeReadableError(guildId.error));
 
-	const user = await DataBase.users.findFirst({
-		where: { tokens: { some: { accesstoken: token } } },
-		select: { userid: true },
-	});
-	if (!user) return error(401, 'Unauthorized');
+	const user = await getUser(token, [AuthTypes.Bearer]);
+	if (user instanceof Response) return user;
 
 	const punishments = await getPunishments({ guildId: guildId.data, userId: user.userid });
 	if (!punishments.length) return json([] as Returned);

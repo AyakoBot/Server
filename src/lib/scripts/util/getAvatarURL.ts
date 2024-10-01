@@ -9,7 +9,7 @@ import type { APIUser } from 'discord-api-types/v10';
  * If the user does not have a custom avatar, a default avatar URL is generated based on the user's discriminator.
  * If the user has a custom avatar, the URL is generated based on the user's ID and avatar hash.
  */
-export default (user: APIUser) => {
+export default (user: APIUser | { discriminator: number; id: string; avatar: string }) => {
 	if (!user.avatar) {
 		return `https://cdn.discordapp.com/embed/avatars/${user.discriminator === '0' ? Number(BigInt(user.id) >> 22n) % 6 : Number(user.discriminator) % 5}.png`;
 	}

@@ -1,12 +1,12 @@
-import { error, json, redirect } from '@sveltejs/kit';
-import type { RequestHandler } from './$types';
+import makeReadableError from '$lib/scripts/util/makeReadableError.js';
+import APIManager from '$lib/server/api.js';
+import DataBase from '$lib/server/database.js';
 import { API, OAuth2Scopes } from '@discordjs/core';
 import { REST } from '@discordjs/rest';
-import DataBase from '$lib/server/database.js';
 import type { linkedRolesDeco } from '@prisma/client';
-import APIManager from '$lib/server/api.js';
+import { error, json, redirect } from '@sveltejs/kit';
 import { z } from 'zod';
-import makeReadableError from '$lib/scripts/util/makeReadableError.js';
+import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async (req) => {
 	const code = req.url.searchParams.get('code');

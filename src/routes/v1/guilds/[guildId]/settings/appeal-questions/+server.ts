@@ -3,17 +3,14 @@ import DataBase from '$lib/server/database.js';
 import { type appealquestions } from '@prisma/client';
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { z } from 'zod';
+import getUser, { AuthTypes } from '$lib/scripts/util/getUser';
 
 export const GET: RequestHandler = async (req) => {
 	const token = await validateToken(req);
 	if (!token) return error(403, 'Invalid or no token provided');
 
-	const user = await DataBase.users.findFirst({
-		where: { tokens: { some: { accesstoken: token } } },
-		select: { userid: true },
-	});
-	if (!user) return error(401, 'Unauthorized');
+	const user = await getUser(token, [AuthTypes.Bot, AuthTypes.Bearer]);
+	if (user instanceof Response) return user;
 
 	const guildId = req.params.guildId;
 

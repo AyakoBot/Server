@@ -6,6 +6,7 @@ import type { RequestHandler } from './$types';
 import type { AppealPunishment } from '@ayako/website/src/lib/scripts/types';
 import { z } from 'zod';
 import makeReadableError from '$lib/scripts/util/makeReadableError';
+import getUser, { AuthTypes } from '$lib/scripts/util/getUser';
 
 export const GET: RequestHandler = async (req) => {
 	const token = await validateToken(req);
@@ -17,11 +18,8 @@ export const GET: RequestHandler = async (req) => {
 		.safeParse(req.params.punishmentId);
 	if (!punishmentId.success) return error(400, makeReadableError(punishmentId.error));
 
-	const user = await DataBase.users.findFirst({
-		where: { tokens: { some: { accesstoken: token } } },
-		select: { userid: true },
-	});
-	if (!user) return error(401, 'Unauthorized');
+	const user = await getUser(token, [AuthTypes.Bot, AuthTypes.Bearer]);
+	if (user instanceof Response) return user;
 
 	const punishment = await getPunishments({
 		punishmentId: punishmentId.data,
