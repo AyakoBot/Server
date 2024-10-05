@@ -25,7 +25,12 @@ const paths = {
 	denylisted: `${basePath}/denylisted.txt`,
 };
 
-type VendorType = 'Kaspersky' | 'Google Safe Browsing' | 'PromptAPI' | 'VirusTotal';
+type VendorType =
+	| 'Kaspersky'
+	| 'Google Safe Browsing'
+	| 'PromptAPI'
+	| 'VirusTotal'
+	| 'Yandex Safe Browsing';
 
 const highlyCredibleVTVendors = [
 	'Yandex Safebrowsing',
@@ -67,6 +72,7 @@ export const scanURL = async (url: string) => {
 	};
 
 	const result = await getTriggersAV(url);
+	console.log(result);
 
 	if (result.triggers === null) {
 		if (self.has('badLinks', url)) self.delete('badLinks', url);
@@ -203,6 +209,7 @@ const getSeverity = (result: VirusVendorsTypings.VirusTotalAnalyses | false) => 
 				highlyCredibleVTVendors.includes(v.engine_name),
 		)
 	) {
+		console.log(JSON.stringify(result.data.attributes.results, null, 2));
 		return true;
 	}
 
@@ -228,11 +235,7 @@ const inGoogleSafeBrowsing = async (u: string) => {
 					],
 					platformTypes: ['ALL_PLATFORMS'],
 					threatEntryTypes: ['URL'],
-					threatEntries: [
-						{
-							url: u,
-						},
-					],
+					threatEntries: [{ url: u }],
 				},
 			}),
 		},
@@ -241,9 +244,7 @@ const inGoogleSafeBrowsing = async (u: string) => {
 	if (!('ok' in res) || !res.ok) return { triggers: false, type: 'Google Safe Browsing' };
 
 	const json = (await res.json()) as VirusVendorsTypings.GoogleSafeBrowsing;
-	if (json.matches?.length) {
-		return { triggers: true, type: 'Google Safe Browsing', result: json };
-	}
+	if (json.matches?.length) return { triggers: true, type: 'Google Safe Browsing', result: json };
 
 	return { triggers: false, type: 'Google Safe Browsing' };
 };
@@ -288,7 +289,18 @@ const getTriggersAV = async (
 
 	const googleSafeBrowsing = await inGoogleSafeBrowsing(url);
 	if (googleSafeBrowsing.triggers) {
-		return { url, type: 'Google Safe Browsing', result: googleSafeBrowsing.result, triggers: true };
+		return {
+			...(googleSafeBrowsing as Omit<Awaited<ReturnType<typeof getTriggersAV>>, 'url'>),
+			url,
+		};
+	}
+
+	const yandexSafeBrowsing = await inYandexSafeBrowsing(url);
+	if (yandexSafeBrowsing.triggers) {
+		return {
+			...(yandexSafeBrowsing as Omit<Awaited<ReturnType<typeof getTriggersAV>>, 'url'>),
+			url,
+		};
 	}
 
 	const promptAPI = await ageCheck(url);
@@ -302,4 +314,38 @@ const getTriggersAV = async (
 	}
 
 	return { triggers: false, url };
+};
+
+const inYandexSafeBrowsing = async (u: string) => {
+	const res = await fetch(
+		`https://sba.yandex.net/v4/threatMatches:find?key=${inYandexSafeBrowsing ?? ''}`,
+		{
+			method: 'POST',
+			body: JSON.stringify({
+				client: {
+					clientId: 'Ayako Development',
+					clientVersion: npm_package_version,
+				},
+				threatInfo: {
+					threatTypes: [
+						'THREAT_TYPE_UNSPECIFIED',
+						'MALWARE',
+						'SOCIAL_ENGINEERING',
+						'UNWANTED_SOFTWARE',
+						'POTENTIALLY_HARMFUL_APPLICATION',
+					],
+					platformTypes: ['ALL_PLATFORMS'],
+					threatEntryTypes: ['URL'],
+					threatEntries: [{ url: u }],
+				},
+			}),
+		},
+	).catch((e: Error) => e);
+
+	if (!('ok' in res) || !res.ok) return { triggers: false, type: 'Yandex Safe Browsing' };
+
+	const json = (await res.json()) as VirusVendorsTypings.YandexSafeBrowsing;
+	if (json.matches?.length) return { triggers: true, type: 'Yandex Safe Browsing', result: json };
+
+	return { triggers: false, type: 'Yandex Safe Browsing' };
 };

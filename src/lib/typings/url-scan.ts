@@ -318,3 +318,41 @@ export type VirusTotalAnalyses = {
 //   };
 //  };
 // };
+
+export type YandexSafeBrowsing = {
+	matches: {
+		threatType:
+			| 'THREAT_TYPE_UNSPECIFIED'
+			| 'MALWARE'
+			| 'SOCIAL_ENGINEERING'
+			| 'UNWANTED_SOFTWARE'
+			| 'POTENTIALLY_HARMFUL_APPLICATION';
+		threatEntryType: 'THREAT_ENTRY_TYPE_UNSPECIFIED' | 'URL' | 'EXECUTABLE';
+		platformType:
+			| 'PLATFORM_TYPE_UNSPECIFIED'
+			| 'WINDOWS'
+			| 'LINUX'
+			| 'ANDROID'
+			| 'OSX'
+			| 'IOS'
+			| 'ANY_PLATFORM'
+			| 'ALL_PLATFORMS'
+			| 'CHROME';
+		threat: { url: `https://${string}` | `http://${string}` };
+		cacheDuration: `${number}.00s`;
+	}[];
+};
+
+// Example: {
+//  "matches": [
+//    {
+//      "threatType": "MALWARE",
+//      "threatEntryType": "URL",
+//      "platformType": "WINDOWS",
+//      "threat": {
+//        "url": "http://malware-driveby.test.safebrowsing.yandex"
+//      },
+//      "cacheDuration": "1200.00s"
+//    }
+//  ]
+// }
