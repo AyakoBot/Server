@@ -9,16 +9,16 @@ import {
 	spamhausToken,
 	VTToken,
 } from '$env/static/private';
-import DataBase from '$lib/server/database.js';
 import getPathFromError from '$lib/scripts/util/getPathFromError.js';
+import API from '$lib/server/api.js';
+import DataBase from '$lib/server/database.js';
 import * as VirusVendorsTypings from '$lib/typings/url-scan.js';
+import dns from 'dns/promises';
 import fs from 'fs';
 import * as Jobs from 'node-schedule';
-import dns from 'dns/promises';
-
 import fishFish from './fishFish';
+import phishingArmy from './phishingArmy';
 import sinkingYachts from './sinkingYachts';
-import API from '$lib/server/api.js';
 
 const basePath = `${process.cwd()}/../CDN/antivirus`;
 const paths = {
@@ -77,7 +77,6 @@ export const scanURL = async (url: string) => {
 	};
 
 	const result = await getTriggersAV(url);
-	console.log(result);
 
 	if (result.triggers === null) {
 		if (self.has('badLinks', url)) self.delete('badLinks', url);
@@ -121,8 +120,9 @@ const inKaspersky = async (u: string) => {
 const checkIfExists = async (url: string) =>
 	!!(await dns.lookup(url, { all: true }).catch(() => [])).length;
 
-// https://phish.sinking.yachts/
 const inSinkingYachts = (u: string) => sinkingYachts.cache.has(u);
+
+const inPhishingArmy = (u: string) => phishingArmy.cache.has(u);
 
 const inSpamHaus = async (u: string) => {
 	const res = await fetch(`https://apibl.spamhaus.net/lookup/v1/dbl/${cleanURL(u)}`, {
@@ -285,6 +285,7 @@ const getTriggersAV = async (
 
 	if (inFishFish(url)) return { url, triggers: true };
 	if (inSinkingYachts(url)) return { url, triggers: true };
+	if (inPhishingArmy(url)) return { url, triggers: true };
 	if (await inSpamHaus(url)) return { url, triggers: true };
 
 	const kaspersky = await inKaspersky(url);
