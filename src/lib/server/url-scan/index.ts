@@ -263,7 +263,7 @@ const reportFishFish = (u: string) => {
 		body: JSON.stringify({
 			url: u,
 			reason:
-				'Reported by at least one of the following Vendors: Google Safe Browsing, SpamHaus, VirusTotal, Sinking Yachts, PromptAPI, FishFish',
+				'Reported by at least one of the following Vendors: Google Safe Browsing, SpamHaus, VirusTotal, Yandex Safe Browsing, Norton Safe Web, NordVPN, Kaspersky Safe Web, PhishingArmy, Sinking Yachts or failed age check with PromptAPI',
 		}),
 	}).catch(() => {});
 };
