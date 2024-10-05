@@ -1,4 +1,6 @@
 import {
+	avWebhookId,
+	avWebhookToken,
 	kasperskyToken,
 	npm_package_version,
 	phishToken,
@@ -16,6 +18,7 @@ import dns from 'dns/promises';
 
 import fishFish from './fishFish';
 import sinkingYachts from './sinkingYachts';
+import API from '$lib/server/api.js';
 
 const basePath = `${process.cwd()}/../CDN/antivirus`;
 const paths = {
@@ -30,6 +33,7 @@ type VendorType =
 	| 'Google Safe Browsing'
 	| 'PromptAPI'
 	| 'VirusTotal'
+	| 'NordVPN'
 	| 'Yandex Safe Browsing';
 
 const highlyCredibleVTVendors = [
@@ -303,6 +307,14 @@ const getTriggersAV = async (
 		};
 	}
 
+	const nordVPN = await inNordVPN(url);
+	if (nordVPN.triggers) {
+		return {
+			...(nordVPN as Omit<Awaited<ReturnType<typeof getTriggersAV>>, 'url'>),
+			url,
+		};
+	}
+
 	const promptAPI = await ageCheck(url);
 	if (promptAPI.triggers) {
 		return { url, triggers: true, result: promptAPI.result, type: 'PromptAPI' };
@@ -348,4 +360,34 @@ const inYandexSafeBrowsing = async (u: string) => {
 	if (json.matches?.length) return { triggers: true, type: 'Yandex Safe Browsing', result: json };
 
 	return { triggers: false, type: 'Yandex Safe Browsing' };
+};
+
+const inNordVPN = async (u: string) => {
+	const res = await fetch(`https://link-checker.nordvpn.com/v1/public-url-checker/check-url`, {
+		method: 'POST',
+		body: JSON.stringify({ url: u }),
+	});
+
+	if (!('ok' in res) || !res.ok) return { triggers: false, type: 'NordVPN' };
+
+	const json = (await res.json()) as VirusVendorsTypings.NordVPN;
+
+	switch (json.category) {
+		case VirusVendorsTypings.NordVPNCategories.Suspicious:
+		case VirusVendorsTypings.NordVPNCategories.Clean:
+			return { triggers: false, type: 'NordVPN' };
+		case VirusVendorsTypings.NordVPNCategories.Malicious:
+		case VirusVendorsTypings.NordVPNCategories.Phishing:
+			return { triggers: true, type: 'NordVPN', result: json };
+		default: {
+			sendNotification({ content: `${u} @ ${json.category}` });
+			return { triggers: false, type: 'NordVPN' };
+		}
+	}
+};
+
+const sendNotification = (payload: { content: string }) => {
+	API.getAPI()
+		.webhooks.execute(avWebhookId, avWebhookToken, payload)
+		.catch(() => {});
 };

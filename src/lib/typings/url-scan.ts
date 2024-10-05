@@ -356,3 +356,18 @@ export type YandexSafeBrowsing = {
 //    }
 //  ]
 // }
+
+export enum NordVPNCategories {
+	'Clean' = 1,
+	'Malicious' = 2,
+	'Phishing' = 3,
+	'Suspicious' = 7,
+}
+
+export type NordVPN = { category: NordVPNCategories; status: 0; url: string };
+
+// Example: {
+//  "category": 1,
+//  "status": 0,
+//  "url": "ayakobot.com"
+// }
