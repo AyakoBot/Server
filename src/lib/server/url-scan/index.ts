@@ -34,6 +34,7 @@ type VendorType =
 	| 'PromptAPI'
 	| 'VirusTotal'
 	| 'NordVPN'
+	| 'Norton'
 	| 'Yandex Safe Browsing';
 
 const highlyCredibleVTVendors = [
@@ -315,6 +316,14 @@ const getTriggersAV = async (
 		};
 	}
 
+	const norton = await inNorton(url);
+	if (norton.triggers) {
+		return {
+			...(norton as Omit<Awaited<ReturnType<typeof getTriggersAV>>, 'url'>),
+			url,
+		};
+	}
+
 	const promptAPI = await ageCheck(url);
 	if (promptAPI.triggers) {
 		return { url, triggers: true, result: promptAPI.result, type: 'PromptAPI' };
@@ -382,6 +391,22 @@ const inNordVPN = async (u: string) => {
 		default: {
 			sendNotification({ content: `${u} @ ${json.category}` });
 			return { triggers: false, type: 'NordVPN' };
+		}
+	}
+};
+
+const inNorton = async (u: string) => {
+	const res = await fetch(`https://safeweb.norton.com/safeweb/sites/v1/details?url=${u}&insert=1`);
+
+	if (!('ok' in res) || !res.ok) return { triggers: false, type: 'Norton' };
+
+	const json = (await res.json()) as VirusVendorsTypings.Norton;
+
+	switch (json.rating) {
+		case VirusVendorsTypings.NortonRatings.Bad:
+			return { triggers: true, type: 'Norton', result: json };
+		default: {
+			return { triggers: false, type: 'Norton' };
 		}
 	}
 };
