@@ -25,6 +25,12 @@ export const handle: Handle = async ({ event, resolve }) => {
 				'Access-Control-Allow-Methods': '*',
 				'Cross-Origin-Opener-Policy': 'unsafe-none',
 				'Cross-Origin-Embedder-Policy': 'unsafe-none',
+				'Content-Security-Policy': "default-src 'self'; frame-ancestors 'none';",
+				'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
+				'X-Frame-Options': 'DENY',
+				'X-Content-Type-Options': 'nosniff',
+				'Referrer-Policy': 'strict-origin-when-cross-origin',
+				'Permissions-Policy': 'camera=(), microphone=(), document-domain=()',
 			},
 		});
 	}
@@ -34,6 +40,17 @@ export const handle: Handle = async ({ event, resolve }) => {
 	doResponseMetrics(response, event.request);
 
 	response.headers.append('Access-Control-Allow-Origin', '*');
+	response.headers.append('Content-Security-Policy', "default-src 'self'; frame-ancestors 'none';");
+	response.headers.append(
+		'Strict-Transport-Security',
+		'max-age=31536000; includeSubDomains; preload',
+	);
+	response.headers.append('X-Frame-Options', 'DENY');
+	response.headers.append('X-Content-Type-Options', 'nosniff');
+	response.headers.append('Referrer-Policy', 'strict-origin-when-cross-origin');
+	response.headers.append('Permissions-Policy', 'camera=(), microphone=(), document-domain=()');
+	response.headers.delete('x-sveltekit-page');
+
 	return response;
 };
 
