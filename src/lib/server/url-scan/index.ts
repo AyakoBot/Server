@@ -68,6 +68,8 @@ export const cleanURL = (s: string) =>
 	s.replace('https://', '').replace('http://', '').replace('www.', '').split(/\/+/g)[0];
 
 export const scanURL = async (url: string) => {
+	url = cleanURL(url).toLowerCase();
+
 	if (scanningQueue.has(url)) return;
 	scanningQueue.add(url);
 
