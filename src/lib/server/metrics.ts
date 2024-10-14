@@ -1,4 +1,4 @@
-import { Counter, Gauge, Registry } from 'prom-client';
+import { Counter, Registry } from 'prom-client';
 import redis from './redis.js';
 import { scheduleJob } from 'node-schedule';
 
