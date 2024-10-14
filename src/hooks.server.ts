@@ -1,21 +1,22 @@
-import { PUBLIC_CDN } from '$env/static/public';
+import { PUBLIC_CDN, PUBLIC_HOSTNAME } from '$env/static/public';
 import cdn from '$lib/server/cdn';
-import { type Handle } from '@sveltejs/kit';
+import { type Handle, type Reroute } from '@sveltejs/kit';
 import metrics from '$lib/server/metrics';
 import endpoints from '$lib/scripts/util/endpoints';
 
+import ayako from '$lib/public/ayako.txt';
+import wzxy from '$lib/public/wzxy.txt';
+
+/** @type {import('@sveltejs/kit').Reroute} */
+export const reroute: Reroute = ({ url }) => {
+	const makeNew = (newUrl: string) => `/${new URL(newUrl).href.split(/\/+/g).slice(2).join('/')}`;
+
+	if (url.pathname.startsWith('/api/')) return makeNew(url.href.replace('/api/', '/'));
+	if (url.hostname === 'wzxy.org') return makeNew(`https://wzxy.org/shorturl/${url.pathname}`);
+};
+
 /** @type {import('@sveltejs/kit').Handle} */
 export const handle: Handle = async ({ event, resolve }) => {
-	if (
-		event.url.href.startsWith(PUBLIC_CDN) ||
-		event.url.href.startsWith(PUBLIC_CDN.replace('https://', 'http://'))
-	) {
-		doCDNMetrics(event.request);
-		return cdn({ event, resolve });
-	}
-
-	event.url = new URL(event.url.href.replace('/api/', '/'));
-
 	doAPIMetrics(event.request);
 
 	if (event.request.method === 'OPTIONS') {
@@ -35,9 +36,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 		});
 	}
 
-	const response = await resolve(event);
-
-	doResponseMetrics(response, event.request);
+	const response = await finish({ event, resolve });
 
 	response.headers.append('Access-Control-Allow-Origin', '*');
 	response.headers.append('Content-Security-Policy', "default-src 'self'; frame-ancestors 'none';");
@@ -51,7 +50,26 @@ export const handle: Handle = async ({ event, resolve }) => {
 	response.headers.append('Permissions-Policy', 'camera=(), microphone=(), document-domain=()');
 	response.headers.delete('x-sveltekit-page');
 
+	if (event.url.hostname === PUBLIC_CDN) return response;
+
+	doResponseMetrics(response, event.request);
+
 	return response;
+};
+
+const finish = (data: Parameters<Handle>[0]) => {
+	if (data.event.url.hostname === PUBLIC_CDN) {
+		doCDNMetrics(data.event.request);
+		return cdn(data);
+	}
+
+	return data.resolve(data.event, {
+		transformPageChunk: ({ html }) =>
+			html.replace(
+				'%customhead%',
+				atob((PUBLIC_HOSTNAME.includes(data.event.url.hostname) ? ayako : wzxy).split(',')[1]),
+			),
+	});
 };
 
 const doAPIMetrics = (request: Request) => {

@@ -1,0 +1,21 @@
+<title>Ayako</title>
+<meta name="theme-color" content="#b0ff00" />
+<meta name="description" content="Ayako provides you with tons of optimized and easy to use features for your Discord experience."/>
+<meta name="twitter:description" content="Ayako provides you with tons of optimized and easy to use features for your Discord experience." />
+<meta name="keywords" content="Ayako,Discord,DiscordBot,Moderation,AutoModeration,Chat,Fun,AntiSpam,Free,Spam,Help,Auto,Giveaway,Categories,Category" />
+<meta property="og:site_name" content="AyakoBot.com" />
+<meta property="og:title" content="Ayako" />
+<meta property="twitter:title" content="Ayako" />
+<meta property="twitter:image" content="https://cdn.ayakobot.com/website_assets/Icon.png" />
+<meta property="og:image" content="https://cdn.ayakobot.com/website_assets/Icon.png" />
+<meta property="og:image:secure_url" content="https://cdn.ayakobot.com/website_assets/Icon.png" />
+<meta property="og:image:width" content="982" />
+<meta property="og:image:height" content="1016" />
+<meta property="og:image:type" content="image/png" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://ayakobot.com/" />
+<meta property="og:description" content="Ayako provides you with tons of optimized and easy to use features for your Discord experience."/>
+<link rel="icon" type="image/png" href="https://cdn.ayakobot.com/website_assets/Icon.png" />
+<link rel="icon" type="image/x-icon" href="https://cdn.ayakobot.com/website_assets/ayako.ico" />
+<link rel="apple-touch-icon" href="https://cdn.ayakobot.com/website_assets/Icon.png" />
+<link rel="canonical" href="https://ayakobot.com/" />

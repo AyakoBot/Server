@@ -1,0 +1,12 @@
+<title>Ayako</title>
+<meta name="theme-color" content="#ffffff" />
+<meta name="description" content="WZXY.org is a gated short URL service."/>
+<meta name="twitter:description" content="WZXY.org is a gated short URL service." />
+<meta name="keywords" content="shorturl,url,short,shrt,shrturl" />
+<meta property="og:site_name" content="WZXY.org" />
+<meta property="og:title" content="WZXY.org" />
+<meta property="twitter:title" content="WZXY.org" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://WZXY.org/" />
+<meta property="og:description" content="WZXY.org is a gated short URL service."/>
+<link rel="canonical" href="https://wzxy.org/" />
