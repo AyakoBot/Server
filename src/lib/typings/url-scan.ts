@@ -371,32 +371,3 @@ export type NordVPN = { category: NordVPNCategories; status: 0; url: string };
 //  "status": 0,
 //  "url": "ayakobot.com"
 // }
-
-export enum NortonRatings {
-	'Safe' = 'r',
-	'Safe2' = 'g',
-	'Bad' = 'b',
-	'Suspicious' = 'w',
-}
-
-export type Norton = {
-	id: number;
-	url: string;
-	rating: NortonRatings;
-	categories: number[];
-	communityRating: number;
-	reviewCount: number;
-	userRating: number;
-	globalRestriction: boolean;
-};
-
-// Example: {
-// 	id: 448,
-// 	url: 'google.com',
-// 	rating: 'r',
-// 	categories: [40],
-// 	communityRating: 4.6,
-// 	reviewCount: 713,
-// 	userRating: 0,
-// 	globalRestriction: false,
-// };

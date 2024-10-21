@@ -28,14 +28,18 @@ const paths = {
 	denylisted: `${basePath}/denylisted.txt`,
 };
 
-type VendorType =
-	| 'Kaspersky'
-	| 'Google Safe Browsing'
-	| 'PromptAPI'
-	| 'VirusTotal'
-	| 'NordVPN'
-	| 'Norton'
-	| 'Yandex Safe Browsing';
+enum TriggerType {
+	Kaspersky = 'Kaspersky',
+	GoogleSafeBrowsing = 'Google Safe Browsing',
+	PromptAPI = 'PromptAPI',
+	VirusTotal = 'VirusTotal',
+	YandexSafeBrowsing = 'Yandex Safe Browsing',
+	NordVPN = 'NordVPN',
+	FishFish = 'FishFish',
+	SinkingYachts = 'Sinking Yachts',
+	PhishingArmy = 'Phishing Army',
+	SpamHaus = 'SpamHaus',
+}
 
 const highlyCredibleVTVendors = [
 	'Yandex Safebrowsing',
@@ -265,7 +269,7 @@ const reportFishFish = (u: string) => {
 		body: JSON.stringify({
 			url: u,
 			reason:
-				'Reported by at least one of the following Vendors: Google Safe Browsing, SpamHaus, VirusTotal, Yandex Safe Browsing, Norton Safe Web, NordVPN, Kaspersky Safe Web, PhishingArmy, Sinking Yachts or failed age check with PromptAPI',
+				'Reported by at least one of the following Vendors: Google Safe Browsing, SpamHaus, VirusTotal, Yandex Safe Browsing, NordVPN, Kaspersky Safe Web, PhishingArmy, Sinking Yachts or failed age check with PromptAPI',
 		}),
 	}).catch(() => {});
 };
@@ -274,25 +278,31 @@ const getTriggersAV = async (
 	url: string,
 ): Promise<{
 	url: string;
-	type?: VendorType;
 	result?:
 		| VirusVendorsTypings.Kaspersky
 		| VirusVendorsTypings.GoogleSafeBrowsing
 		| VirusVendorsTypings.PromptAPI
 		| VirusVendorsTypings.VirusTotalAnalyses;
 	triggers: boolean | null;
+	type: TriggerType | null;
 }> => {
-	const websiteResponse = await checkIfExists(url);
-	if (!websiteResponse) return { url, triggers: null };
+	try {
+		new URL(url);
+	} catch {
+		return { url, triggers: null, type: null };
+	}
 
-	if (inFishFish(url)) return { url, triggers: true };
-	if (inSinkingYachts(url)) return { url, triggers: true };
-	if (inPhishingArmy(url)) return { url, triggers: true };
-	if (await inSpamHaus(url)) return { url, triggers: true };
+	const websiteResponse = await checkIfExists(url);
+	if (!websiteResponse) return { url, triggers: null, type: null };
+
+	if (inFishFish(url)) return { url, triggers: true, type: TriggerType.FishFish };
+	if (inSinkingYachts(url)) return { url, triggers: true, type: TriggerType.SinkingYachts };
+	if (inPhishingArmy(url)) return { url, triggers: true, type: TriggerType.PhishingArmy };
+	if (await inSpamHaus(url)) return { url, triggers: true, type: TriggerType.SpamHaus };
 
 	const kaspersky = await inKaspersky(url);
 	if (kaspersky.triggered) {
-		return { url, type: 'Kaspersky', result: kaspersky.result, triggers: true };
+		return { url, result: kaspersky.result, triggers: true, type: TriggerType.Kaspersky };
 	}
 
 	const googleSafeBrowsing = await inGoogleSafeBrowsing(url);
@@ -300,6 +310,7 @@ const getTriggersAV = async (
 		return {
 			...(googleSafeBrowsing as Omit<Awaited<ReturnType<typeof getTriggersAV>>, 'url'>),
 			url,
+			type: TriggerType.GoogleSafeBrowsing,
 		};
 	}
 
@@ -308,6 +319,7 @@ const getTriggersAV = async (
 		return {
 			...(yandexSafeBrowsing as Omit<Awaited<ReturnType<typeof getTriggersAV>>, 'url'>),
 			url,
+			type: TriggerType.YandexSafeBrowsing,
 		};
 	}
 
@@ -316,28 +328,21 @@ const getTriggersAV = async (
 		return {
 			...(nordVPN as Omit<Awaited<ReturnType<typeof getTriggersAV>>, 'url'>),
 			url,
-		};
-	}
-
-	const norton = await inNorton(url);
-	if (norton.triggers) {
-		return {
-			...(norton as Omit<Awaited<ReturnType<typeof getTriggersAV>>, 'url'>),
-			url,
+			type: TriggerType.NordVPN,
 		};
 	}
 
 	const promptAPI = await ageCheck(url);
 	if (promptAPI.triggers) {
-		return { url, triggers: true, result: promptAPI.result, type: 'PromptAPI' };
+		return { url, triggers: true, result: promptAPI.result, type: TriggerType.PromptAPI };
 	}
 
 	const virusTotal = await inVT(url);
 	if (virusTotal.triggers && virusTotal.result !== false && typeof virusTotal.result !== 'string') {
-		return { url, triggers: true, result: virusTotal.result, type: 'VirusTotal' };
+		return { url, triggers: true, result: virusTotal.result, type: TriggerType.VirusTotal };
 	}
 
-	return { triggers: false, url };
+	return { triggers: false, url, type: null };
 };
 
 const inYandexSafeBrowsing = async (u: string) => {
@@ -394,22 +399,6 @@ const inNordVPN = async (u: string) => {
 		default: {
 			sendNotification({ content: `${u} @ ${json.category}` });
 			return { triggers: false, type: 'NordVPN' };
-		}
-	}
-};
-
-const inNorton = async (u: string) => {
-	const res = await fetch(`https://safeweb.norton.com/safeweb/sites/v1/details?url=${u}&insert=1`);
-
-	if (!('ok' in res) || !res.ok) return { triggers: false, type: 'Norton' };
-
-	const json = (await res.json()) as VirusVendorsTypings.Norton;
-
-	switch (json.rating) {
-		case VirusVendorsTypings.NortonRatings.Bad:
-			return { triggers: true, type: 'Norton', result: json };
-		default: {
-			return { triggers: false, type: 'Norton' };
 		}
 	}
 };
