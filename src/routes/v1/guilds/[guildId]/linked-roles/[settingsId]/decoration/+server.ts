@@ -7,6 +7,7 @@ import type { linkedRolesDeco } from '@prisma/client';
 import { error, json, redirect } from '@sveltejs/kit';
 import { z } from 'zod';
 import type { RequestHandler } from './$types';
+import { nirn } from '$env/static/private';
 
 export const GET: RequestHandler = async (req) => {
 	const code = req.url.searchParams.get('code');
@@ -42,7 +43,7 @@ export const GET: RequestHandler = async (req) => {
 			}),
 		);
 
-	const rest = new REST({ api: 'http://nirn:8080/api', authPrefix: 'Bot' });
+	const rest = new REST({ api: `http://${nirn}:8080/api`, authPrefix: 'Bot' });
 	const botAPI = new API(rest.setToken(settings.botToken));
 	const tokens = await botAPI.oauth2.tokenExchange({
 		client_id: settings.botId,
