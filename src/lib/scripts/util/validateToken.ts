@@ -21,6 +21,7 @@ export default async <T extends RequestEvent | undefined>(
 	if (!authHeader) return null;
 
 	const [type, auth] = authHeader.split(/\s+/g);
+ if (!auth) return null;
 
 	switch (type as 'Bearer' | 'Bot') {
 		case 'Bearer':
