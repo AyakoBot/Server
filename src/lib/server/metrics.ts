@@ -1,6 +1,7 @@
 import { Counter, Registry } from 'prom-client';
 import redis from './redis.js';
 import { scheduleJob } from 'node-schedule';
+import { dev } from '$env/static/private';
 
 const registry = new Registry();
 
@@ -22,9 +23,15 @@ const responses = new Counter({
 	labelNames: ['status', 'path'],
 });
 
-registry.registerMetric(apiCalls);
-registry.registerMetric(cdnCalls);
-registry.registerMetric(responses);
+if (dev !== 'true') {
+	registry.registerMetric(apiCalls);
+	registry.registerMetric(cdnCalls);
+	registry.registerMetric(responses);
+
+	scheduleJob('metrics', '*/5 * * * * *', async () => {
+		redis.set(`metrics:api`, await registry.metrics());
+	});
+}
 
 export default {
 	apiCall: (
@@ -35,7 +42,3 @@ export default {
 	cdnCall: (folder: string) => cdnCalls.labels(folder).inc(),
 	response: (status: string, path: string) => responses.labels(status, path).inc(),
 };
-
-scheduleJob('metrics', '*/5 * * * * *', async () => {
-	redis.set(`metrics:api`, await registry.metrics());
-});

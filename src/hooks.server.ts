@@ -1,11 +1,14 @@
+import { dev } from '$env/static/private';
 import { PUBLIC_CDN, PUBLIC_HOSTNAME } from '$env/static/public';
-import cdn from '$lib/server/cdn';
-import { type Handle, type Reroute } from '@sveltejs/kit';
-import metrics from '$lib/server/metrics';
 import endpoints from '$lib/scripts/util/endpoints';
+import cdn from '$lib/server/cdn';
+import metrics from '$lib/server/metrics';
+import { type Handle, type Reroute } from '@sveltejs/kit';
 
 import ayako from '$lib/public/ayako.txt';
 import wzxy from '$lib/public/wzxy.txt';
+
+const inDev = dev === 'true';
 
 /** @type {import('@sveltejs/kit').Reroute} */
 export const reroute: Reroute = ({ url }) => {
@@ -17,7 +20,7 @@ export const reroute: Reroute = ({ url }) => {
 
 /** @type {import('@sveltejs/kit').Handle} */
 export const handle: Handle = async ({ event, resolve }) => {
-	doAPIMetrics(event.request);
+	if (!inDev) doAPIMetrics(event.request);
 
 	if (event.request.method === 'OPTIONS') {
 		return new Response(null, {
@@ -52,14 +55,14 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	if (event.url.hostname === PUBLIC_CDN) return response;
 
-	doResponseMetrics(response, event.request);
+	if (!inDev) doResponseMetrics(response, event.request);
 
 	return response;
 };
 
 const finish = (data: Parameters<Handle>[0]) => {
 	if (data.event.url.hostname === PUBLIC_CDN) {
-		doCDNMetrics(data.event.request);
+		if (!inDev) doCDNMetrics(data.event.request);
 		return cdn(data);
 	}
 
