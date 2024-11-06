@@ -21,12 +21,14 @@ export const GET: RequestHandler = async (req) => {
 		? await DataBase.customclients.findUnique({ where: { guildid: state } })
 		: undefined;
 
+	const redirectUri = req.url.searchParams.get('redirect_uri');
+
 	const token = await API.getAPI().oauth2.tokenExchange({
 		client_id: settings ? (settings.appid ?? PUBLIC_ID) : PUBLIC_ID,
 		client_secret: settings ? (settings.secret ?? BOT_SECRET) : BOT_SECRET,
 		grant_type: 'authorization_code',
 		code: bearer,
-		redirect_uri: `${PUBLIC_HOSTNAME}/login`,
+		redirect_uri: redirectUri || `${PUBLIC_HOSTNAME}/login`,
 	});
 
 	if (!token) return error(401, 'Invalid code');
