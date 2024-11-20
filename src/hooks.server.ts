@@ -4,9 +4,7 @@ import endpoints from '$lib/scripts/util/endpoints';
 import cdn from '$lib/server/cdn';
 import metrics from '$lib/server/metrics';
 import { type Handle, type Reroute } from '@sveltejs/kit';
-
-import ayako from '$lib/public/ayako.txt';
-import wzxy from '$lib/public/wzxy.txt';
+import fs from 'fs';
 
 const inDev = dev === 'true';
 
@@ -54,13 +52,13 @@ export const handle: Handle = async ({ event, resolve }) => {
 	response.headers.delete('x-sveltekit-page');
 
 	if (event.url.hostname === PUBLIC_CDN) return response;
-
 	if (!inDev) doResponseMetrics(response, event.request);
 
 	return response;
 };
 
 const finish = (data: Parameters<Handle>[0]) => {
+ console.log(1, data.event.url.hostname, PUBLIC_CDN);
 	if (data.event.url.hostname === PUBLIC_CDN) {
 		if (!inDev) doCDNMetrics(data.event.request);
 		return cdn(data);
@@ -70,7 +68,16 @@ const finish = (data: Parameters<Handle>[0]) => {
 		transformPageChunk: ({ html }) =>
 			html.replace(
 				'%customhead%',
-				atob((PUBLIC_HOSTNAME.includes(data.event.url.hostname) ? ayako : wzxy).split(',')[1]),
+				atob(
+					fs
+						.readFileSync(
+							PUBLIC_HOSTNAME.includes(data.event.url.hostname)
+								? './static/ayako.txt'
+								: './static/wzxy.txt',
+							'utf-8',
+						)
+						.split(',')[1],
+				),
 			),
 	});
 };
