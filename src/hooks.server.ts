@@ -58,7 +58,6 @@ export const handle: Handle = async ({ event, resolve }) => {
 };
 
 const finish = (data: Parameters<Handle>[0]) => {
- console.log(1, data.event.url.hostname, PUBLIC_CDN);
 	if (data.event.url.hostname === PUBLIC_CDN) {
 		if (!inDev) doCDNMetrics(data.event.request);
 		return cdn(data);
@@ -120,7 +119,6 @@ const doResponseMetrics = (response: Response, request: Request) => {
 			e.split(/\//g).length === urlParts.length &&
 			e.split(/\//g).every((part, j) => part.startsWith(':') || urlParts[j] === part),
 	);
-	console.log(endpoint);
 	if (!endpoint) return;
 
 	metrics.response(String(response.status), endpoint);
