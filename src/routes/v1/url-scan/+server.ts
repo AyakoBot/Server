@@ -56,8 +56,10 @@ export const PUT: RequestHandler = async (req) => {
 
 	scanURL(url);
 
-	return json({ scanId, idExpires: expires }, { status: 200 });
+	return json({ scanId, idExpires: expires } as PUTResponse, { status: 200 });
 };
+
+export type PUTResponse = { scanId: string; idExpires: number };
 
 export const PATCH: RequestHandler = async (req) => {
 	if (!req.request.headers.get('Authorization')) return new Response(null, { status: 401 });
@@ -76,5 +78,7 @@ export const PATCH: RequestHandler = async (req) => {
 
 	scanURL(cleanURL(url));
 
-	return json({ scanId, idExpires: expires }, { status: 200 });
+	return json({ scanId, idExpires: expires } as PATCHResponse, { status: 200 });
 };
+
+export type PATCHResponse = { scanId: string; idExpires: number };

@@ -25,7 +25,7 @@ export const GET: RequestHandler = async (req) => {
 	if (user instanceof Response) return user;
 
 	const punishments = await getPunishments({ guildId: guildId.data, userId: user.userid });
-	if (!punishments.length) return json([] as Returned);
+	if (!punishments.length) return json([] as GETResponse);
 
 	const appeals = await DataBase.appeals.findMany({
 		where: { punishmentid: { in: punishments.map((p) => p.uniquetimestamp) } },
@@ -43,8 +43,8 @@ export const GET: RequestHandler = async (req) => {
 				id: p.channelid,
 			},
 			duration: 'duration' in p ? Number(p.duration) : undefined,
-		})) as Returned,
+		})) as GETResponse,
 	);
 };
 
-export type Returned = AppealPunishment[];
+export type GETResponse = AppealPunishment[];

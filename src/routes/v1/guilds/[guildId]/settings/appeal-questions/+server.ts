@@ -32,15 +32,15 @@ export const GET: RequestHandler = async (req) => {
 		})
 		.then((res) =>
 			res.map((q) => {
-				const question = q as unknown as Returned[number];
+				const question = q as unknown as GETResponse[number];
 				question.id = Number(q.uniquetimestamp);
-				delete (question as Returned[number] & { uniquetimestamp?: unknown }).uniquetimestamp;
+				delete (question as GETResponse[number] & { uniquetimestamp?: unknown }).uniquetimestamp;
 				return question;
 			}),
 		);
 	if (!questions.length) return error(404, 'Appeals are not enabled for this server');
 
-	return json(questions as Returned);
+	return json(questions as GETResponse);
 };
 
-export type Returned = (Omit<appealquestions, 'uniquetimestamp'> & { id: number })[];
+export type GETResponse = (Omit<appealquestions, 'uniquetimestamp'> & { id: number })[];

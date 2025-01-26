@@ -18,7 +18,7 @@ export const GET: RequestHandler = async (req) => {
 
 	const uses = await DataBase.shrtUrlUses.findMany({ where: { id: req.params.id } });
 
-	return json(uses as GETReturned);
+	return json(uses.map((u) => ({ ...u, timestamp: Number(u.timestamp) })) as GETResponse);
 };
 
-export type GETReturned = { id: string; timestamp: number }[];
+export type GETResponse = { id: string; timestamp: number }[];

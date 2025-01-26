@@ -21,10 +21,10 @@ export const GET: RequestHandler = async (req) => {
 
 	if (!blocksNum.success) return error(400, makeReadableError(blocksNum.error));
 
-	return json(getChunks(await DataBase.features.findMany(), Number(blocks.data)) as Returned);
+	return json(getChunks(await DataBase.features.findMany(), Number(blocks.data)) as GETResponse);
 };
 
-export type Returned = {
+export type GETResponse = {
 	title: string;
 	subtitle: string;
 	image: string;

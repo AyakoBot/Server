@@ -19,5 +19,9 @@ export const POST: RequestHandler = async (req) => {
 	});
 	if (!apiToken) return error(500, 'Failed to generate API token');
 
-	return json({ token: apiToken });
+	return json({ token: apiToken } as POSTResponse);
+};
+
+export type POSTResponse = {
+	token: string;
 };

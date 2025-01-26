@@ -40,12 +40,12 @@ export const GET: RequestHandler = async (req) => {
 	return json({
 		appealEnabled,
 		otherMutuals,
-	} as Returned);
+	} as GETResponse);
 };
 
 type ReturnedGuild = Pick<APIGuild, 'id' | 'name' | 'icon' | 'banner'>[];
 
-export type Returned = {
+export type GETResponse = {
 	appealEnabled: ReturnedGuild;
 	otherMutuals: ReturnedGuild;
 };

@@ -28,11 +28,11 @@ export const GET: RequestHandler = async () => {
 					url: s,
 				})),
 			};
-		}) as Returned,
+		}) as GETResponse,
 	);
 };
 
-export type Returned = {
+export type GETResponse = {
 	userid: string;
 	roles: string[];
 	username?: string;

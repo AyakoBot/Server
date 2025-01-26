@@ -14,9 +14,7 @@ export const GET: RequestHandler = async (req) => {
 	});
 	if (!appeal) return error(404, 'No appeal found');
 
-	return json({ status: appeal.status } as Returned);
+	return json({ status: appeal.status } as GETResponse);
 };
 
-export type Returned = {
-	status: AppealStatus;
-};
+export type GETResponse = { status: AppealStatus };

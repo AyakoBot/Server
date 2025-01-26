@@ -67,7 +67,7 @@ export const GET: RequestHandler = async (req) => {
 						description: c.desc,
 					},
 				};
-			}) as Returned
+			}) as GETResponse
 		).filter((a) =>
 			query.data && query.data.length
 				? a.art.description?.toLowerCase().includes(query.data) ||
@@ -78,7 +78,7 @@ export const GET: RequestHandler = async (req) => {
 	);
 };
 
-export type Returned = {
+export type GETResponse = {
 	user: {
 		username: string;
 		avatar: string;

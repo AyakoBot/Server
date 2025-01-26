@@ -22,7 +22,7 @@ export const GET: RequestHandler = async (req) => {
 		uses: uses.filter((u) => u.id === s.id).length,
 	}));
 
-	return json(urlsWithUses as GETReturned);
+	return json(urlsWithUses as GETResponse);
 };
 
-export type GETReturned = { id: string; forward: string; uses: number }[];
+export type GETResponse = { id: string; forward: string; uses: number }[];

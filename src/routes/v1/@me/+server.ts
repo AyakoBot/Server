@@ -17,10 +17,10 @@ export const GET: RequestHandler = async (req) => {
 		avatar: getAvatarURL({ discriminator: 0, avatar: user.avatar, id: user.userid }),
 		socials: user.socials.map((s, i) => ({ type: user.socialstype[i], url: s })),
 		votereminders: user.votereminders,
-	} as Result);
+	} as GETResponse);
 };
 
-export type Result = {
+export type GETResponse = {
 	id: string;
 	name: string;
 	avatar: string;

@@ -43,7 +43,7 @@ export const GET: RequestHandler = async (req) => {
 			id: punishment.channelid,
 		},
 		duration: 'duration' in punishment ? Number(punishment.duration) : undefined,
-	} as Returned);
+	} as GETResponse);
 };
 
-export type Returned = AppealPunishment;
+export type GETResponse = AppealPunishment;

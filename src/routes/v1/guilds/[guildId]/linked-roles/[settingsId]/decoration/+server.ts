@@ -76,8 +76,13 @@ export const GET: RequestHandler = async (req) => {
 		platform_username: bot.description.slice(0, 100) || undefined,
 	});
 
-	return json({ success: 'true', message: 'Close this tab and return to Discord to continue' });
+	return json({
+		success: true,
+		message: 'Close this tab and return to Discord to continue',
+	} as GETResponse);
 };
 
 const getRedirectURI = (settings: linkedRolesDeco) =>
 	`https://api.ayakobot.com/v1/guilds/${settings.guildid}/linked-roles/${settings.uniquetimestamp}/decoration`;
+
+export type GETResponse = { success: boolean; message: string };

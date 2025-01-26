@@ -38,10 +38,10 @@ export const GET: RequestHandler = async (req) => {
 		memberCount: Number(guild.membercount),
 		name: guild.name,
 		presenceCount: Number(guild.presencecount),
-	} as Returned);
+	} as GETResponse);
 };
 
-export type Returned = {
+export type GETResponse = {
 	banner: string | null;
 	features: string[];
 	id: string;

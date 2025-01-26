@@ -11,10 +11,10 @@ export const GET: RequestHandler = async () => {
 		userCount: Number(count.allUsers),
 		guildInstallCount: Number(count.guildCount),
 		userInstallCount: Number(count.userInstalls),
-	} as Returned);
+	} as GETResponse);
 };
 
-export type Returned = {
+export type GETResponse = {
 	guildCount: number;
 	userCount: number;
 	guildInstallCount: number;

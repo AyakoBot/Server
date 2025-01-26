@@ -13,11 +13,11 @@ export const GET: RequestHandler = async () => {
 			score: Number(r.score),
 			username: r.username,
 			avatar: r.avatar || `https://cdn.discordapp.com/embed/avatars/${Number(r.userid) % 6}.png`,
-		})) as Returned,
+		})) as GETResponse,
 	);
 };
 
-export type Returned = {
+export type GETResponse = {
 	userid: string;
 	score: number;
 	username: string;

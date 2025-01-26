@@ -1,9 +1,9 @@
-import { error, json } from '@sveltejs/kit';
+import makeReadableError from '$lib/scripts/util/makeReadableError';
 import DataBase from '$lib/server/database.js';
-import type { RequestHandler } from './$types';
+import { error, json } from '@sveltejs/kit';
 import { GuildFeature } from 'discord-api-types/v10';
 import { z } from 'zod';
-import makeReadableError from '$lib/scripts/util/makeReadableError';
+import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async (req) => {
 	const take = z
@@ -77,11 +77,11 @@ export const GET: RequestHandler = async (req) => {
 			banner: s.banner,
 			invite: s.invite,
 			membercount: Number(s.membercount),
-		})) as Returned,
+		})) as GETResponse,
 	);
 };
 
-export type Returned = {
+export type GETResponse = {
 	guildid: string;
 	name: string;
 	icon: string | null;

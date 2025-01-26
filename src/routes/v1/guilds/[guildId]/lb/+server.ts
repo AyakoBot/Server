@@ -57,11 +57,11 @@ export const GET: RequestHandler = async (req) => {
 					avatar: user?.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png',
 				},
 			};
-		}) as Returned,
+		}) as GETResponse,
 	);
 };
 
-export type Returned = {
+export type GETResponse = {
 	xp: number;
 	level: number;
 	multiplier: number;

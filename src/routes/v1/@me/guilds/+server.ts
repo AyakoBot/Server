@@ -32,8 +32,8 @@ export const GET: RequestHandler = async (req) => {
 			.map((g) => ({
 				...g,
 				hasBot: !!botGuilds.find((g2) => g2.guildid === g.id),
-			})) as Returned,
+			})) as GETResponse,
 	);
 };
 
-export type Returned = (RESTAPIPartialCurrentUserGuild & { hasBot: boolean })[];
+export type GETResponse = (RESTAPIPartialCurrentUserGuild & { hasBot: boolean })[];
