@@ -52,9 +52,9 @@ const autocomplete = (body: APIApplicationCommandAutocompleteInteraction) => {
 		(body.data.options[0] as unknown as typeof body.data).options[0] as unknown as typeof body.data
 	).options as APIApplicationCommandInteractionDataOption[];
 
-	const repo = (
-		commandOpts.find((o) => o.name === 'repo') as APIApplicationCommandInteractionDataStringOption
-	)?.value as 'Ayako-v2' | 'Ayako' | 'Website' | 'Server';
+	// const repo = (
+	// 	commandOpts.find((o) => o.name === 'repo') as APIApplicationCommandInteractionDataStringOption
+	// )?.value as 'Ayako-v2' | 'Ayako' | 'Website' | 'Server';
 
 	const curval = [
 		...new Set(
@@ -145,7 +145,7 @@ const command = async (body: APIApplicationCommandInteraction) => {
 
 	const t = await addResponse.text();
 
-	if (!t.includes("errors")) {
+	if (!t.includes('errors')) {
 		return json({
 			type: 4,
 			data: {

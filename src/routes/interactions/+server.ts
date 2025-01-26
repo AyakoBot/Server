@@ -8,6 +8,7 @@ import redis from '$lib/server/redis.js';
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export const POST: RequestHandler = async (req) => {
+
 	const signature = req.request.headers.get('X-Signature-Ed25519');
 	if (!signature) return error(401, 'Unauthorized');
 
