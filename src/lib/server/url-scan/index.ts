@@ -220,7 +220,6 @@ const getSeverity = (result: VirusVendorsTypings.VirusTotalAnalyses | false) => 
 				highlyCredibleVTVendors.includes(v.engine_name),
 		)
 	) {
-		console.log(JSON.stringify(result.data.attributes.results, null, 2));
 		return true;
 	}
 

@@ -23,15 +23,13 @@ const responses = new Counter({
 	labelNames: ['status', 'path'],
 });
 
-if (dev !== 'true') {
-	registry.registerMetric(apiCalls);
-	registry.registerMetric(cdnCalls);
-	registry.registerMetric(responses);
+registry.registerMetric(apiCalls);
+registry.registerMetric(cdnCalls);
+registry.registerMetric(responses);
 
-	scheduleJob('metrics', '*/5 * * * * *', async () => {
-		redis.set(`metrics:api`, await registry.metrics());
-	});
-}
+scheduleJob('metrics', '*/5 * * * * *', async () => {
+	redis.set(`metrics:api`, await registry.metrics());
+});
 
 export default {
 	apiCall: (

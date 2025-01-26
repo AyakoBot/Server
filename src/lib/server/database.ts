@@ -1,6 +1,7 @@
+import { DATABASE_URL } from '$env/static/private';
 import { Prisma, PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({ datasources: { db: { url: DATABASE_URL } } });
 
 prisma.$use(async (params, next) => {
 	try {
