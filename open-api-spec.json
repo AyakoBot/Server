@@ -1,0 +1,3425 @@
+{
+	"openapi": "3.0.3",
+	"info": {
+		"title": "Ayako HTTP API",
+		"description": "Consolidated OpenAPI spec for routes in src/routes based on code references and zod validation.",
+		"termsOfService": "https://ayakobot.com/terms",
+		"license": {
+			"name": "CC BY-NC 4.0",
+			"url": "https://creativecommons.org/licenses/by-nc/4.0/"
+		},
+		"version": "1.0.0"
+	},
+	"servers": [
+		{
+			"url": "https://api.ayakobot.com/"
+		}
+	],
+	"tags": [
+		{
+			"name": "Debug",
+			"description": "Diagnostic and debugging endpoints for monitoring service health, metrics collection, and system status checks"
+		},
+		{
+			"name": "ShortURL",
+			"description": "URL shortener service endpoints for creating, managing and tracking usage of shortened URLs"
+		},
+		{
+			"name": "Punishments",
+			"description": "Moderation punishment endpoints for managing user infractions, appeals, and punishment history across guilds"
+		},
+		{
+			"name": "Guilds",
+			"description": "Discord server management endpoints for guild settings, statistics, leaderboards, appeal configurations and linked role decorations"
+		},
+		{
+			"name": "URL-Scan",
+			"description": "URL scanning service for checking and analyzing suspicious links, maintaining allow/deny lists, and managing scan history"
+		},
+		{
+			"name": "Me",
+			"description": "User-specific endpoints for managing personal data, settings, reminders, blocked commands, OAuth2 authentication and profile information"
+		},
+		{
+			"name": "Bot",
+			"description": "Bot-specific endpoints for statistics, features, artworks, contributors, reviews, interactions and service-wide configurations"
+		},
+		{
+			"name": "GitHub",
+			"description": "GitHub integration endpoints for issue tracking, repository management and Discord-GitHub webhook interactions"
+		},
+		{
+			"name": "Users",
+			"description": "User data endpoints for searching and managing Discord user information, cached profiles and bulk user lookups"
+		}
+	],
+	"paths": {
+		"/debug": {
+			"get": {
+				"tags": ["Debug"],
+				"summary": "Debug route",
+				"operationId": "getDebugInfo",
+				"responses": {
+					"200": {
+						"$ref": "#/components/responses/DebugInfo"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerError"
+					}
+				}
+			}
+		},
+		"/shorturl/{redirectId}": {
+			"get": {
+				"tags": ["ShortURL", "Debug"],
+				"summary": "Redirect short URL",
+				"operationId": "getShortUrlByRedirectId",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "redirectId",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"maxLength": 8,
+							"required": true
+						}
+					}
+				],
+				"responses": {
+					"307": {
+						"description": "Redirect to resolved URL",
+						"headers": {
+							"Location": {
+								"schema": {
+									"type": "string",
+									"format": "uri"
+								},
+								"description": "URL to redirect to"
+							}
+						}
+					},
+					"404": {
+						"$ref": "#/components/responses/NotFound"
+					}
+				}
+			}
+		},
+		"/v1/punishments/{punishmentId}": {
+			"get": {
+				"tags": ["Punishments"],
+				"summary": "Get a single punishment",
+				"operationId": "getPunishmentById",
+				"parameters": [
+					{ "$ref": "#/components/parameters/PunishmentId" },
+					{ "$ref": "#/components/parameters/Authorization" }
+				],
+				"responses": {
+					"200": {
+						"description": "Punishment data",
+						"content": {
+							"application/json": {
+								"schema": {
+									"allOf": [
+										{
+											"$ref": "#/components/schemas/PunishmentResponse"
+										},
+										{
+											"type": "object",
+											"properties": {
+												"id": {
+													"readOnly": true
+												},
+												"createdAt": {
+													"type": "string",
+													"format": "date-time",
+													"readOnly": true
+												}
+											}
+										}
+									]
+								}
+							}
+						}
+					},
+					"404": {
+						"$ref": "#/components/responses/NotFound"
+					},
+					"401": {
+						"$ref": "#/components/responses/Unauthorized"
+					}
+				},
+				"security": [
+					{
+						"BearerAuth": ["user"]
+					}
+				]
+			}
+		},
+		"/v1/punishments/{punishmentId}/appeal": {
+			"post": {
+				"tags": ["Punishments", "Me"],
+				"summary": "Appeal a punishment",
+				"operationId": "createPunishmentAppealById",
+				"parameters": [
+					{ "$ref": "#/components/parameters/PunishmentId" },
+					{ "$ref": "#/components/parameters/Authorization" }
+				],
+				"requestBody": {
+					"description": "Appeal body validated by zod (all fields must be strings, numeric keys, etc.)",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"patternProperties": {
+									"^\\d+$": {
+										"type": "string"
+									}
+								},
+								"additionalProperties": false
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Appeal submitted",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"success": { "type": "boolean" }
+									}
+								}
+							}
+						}
+					},
+					"400": {
+						"$ref": "#/components/responses/ValidationError"
+					},
+					"401": {
+						"$ref": "#/components/responses/Unauthorized"
+					},
+					"404": {
+						"$ref": "#/components/responses/NotFound"
+					}
+				},
+				"security": [
+					{
+						"BearerAuth": ["user"]
+					}
+				]
+			}
+		},
+		"/v1/punishments/{punishmentId}/status": {
+			"get": {
+				"tags": ["Punishments", "Me"],
+				"summary": "Get punishment appeal status",
+				"description": "Returns the current appeal status for a punishment",
+				"operationId": "getPunishmentAppealStatusById",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "punishmentId",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"description": "Punishment identifier"
+						}
+					},
+					{
+						"in": "header",
+						"name": "Authorization",
+						"required": true,
+						"description": "Bearer token",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Appeal status",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": ["status"],
+									"properties": {
+										"status": {
+											"type": "string",
+											"enum": ["accepted", "rejected", "pending"],
+											"description": "Current appeal status"
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"$ref": "#/components/responses/Unauthorized"
+					},
+					"403": {
+						"$ref": "#/components/responses/Forbidden"
+					},
+					"404": {
+						"$ref": "#/components/responses/NotFound"
+					}
+				},
+				"security": [
+					{
+						"BearerAuth": []
+					}
+				]
+			}
+		},
+		"/v1/guilds": {
+			"get": {
+				"tags": ["Guilds"],
+				"summary": "Get publicly visible guilds",
+				"operationId": "getGuilds",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "skip",
+						"description": "Skip number of results",
+						"required": false,
+						"schema": { "type": "integer", "minimum": 0 }
+					},
+					{
+						"in": "query",
+						"name": "leastMemberCount",
+						"description": "Minimum guild members",
+						"required": false,
+						"schema": { "type": "integer", "minimum": 2 }
+					},
+					{
+						"in": "query",
+						"name": "q",
+						"description": "Search term",
+						"required": false,
+						"schema": { "type": "string", "maxLength": 100 }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Array of public guilds",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "array",
+									"items": { "$ref": "#/components/schemas/GuildEntry" }
+								}
+							}
+						}
+					},
+					"400": {
+						"$ref": "#/components/responses/ValidationError"
+					}
+				}
+			}
+		},
+		"/v1/guilds/{guildId}": {
+			"get": {
+				"tags": ["Guilds"],
+				"summary": "Get guild info",
+				"description": "Returns public information about a guild",
+				"operationId": "getGuildById",
+				"parameters": [{ "$ref": "#/components/parameters/GuildId" }],
+				"responses": {
+					"200": {
+						"description": "Guild information",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": ["id", "name", "memberCount", "presenceCount"],
+									"properties": {
+										"banner": {
+											"type": "string",
+											"nullable": true,
+											"description": "Guild banner hash"
+										},
+										"features": {
+											"type": "array",
+											"items": {
+												"type": "string"
+											},
+											"description": "Discord guild feature flags"
+										},
+										"id": {
+											"type": "string",
+											"description": "Discord guild ID"
+										},
+										"icon": {
+											"type": "string",
+											"description": "Guild icon hash"
+										},
+										"invite": {
+											"type": "string",
+											"description": "Invite code"
+										},
+										"name": {
+											"type": "string",
+											"description": "Guild name"
+										},
+										"memberCount": {
+											"type": "integer",
+											"description": "Total member count"
+										},
+										"presenceCount": {
+											"type": "integer",
+											"description": "Online member count"
+										}
+									}
+								}
+							}
+						}
+					},
+					"400": {
+						"$ref": "#/components/responses/ValidationError"
+					},
+					"404": {
+						"$ref": "#/components/responses/NotFound"
+					}
+				}
+			}
+		},
+		"/v1/guilds/{guildId}/lb": {
+			"get": {
+				"tags": ["Guilds"],
+				"summary": "Leaderboard for a guild",
+				"operationId": "getGuildLeaderboardById",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "guildId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "take",
+						"description": "Number of records to take",
+						"required": false,
+						"schema": { "type": "integer" }
+					},
+					{
+						"in": "query",
+						"name": "skip",
+						"description": "Number of records to skip",
+						"required": false,
+						"schema": { "type": "integer", "minimum": 0 }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Guild leaderboards",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"$ref": "#/components/schemas/GuildLeaderboardItem"
+									}
+								}
+							}
+						}
+					},
+					"400": {
+						"$ref": "#/components/responses/ValidationError"
+					},
+					"404": {
+						"$ref": "#/components/responses/NotFound"
+					}
+				}
+			}
+		},
+		"/v1/guilds/{guildId}/settings/appeal-questions": {
+			"get": {
+				"tags": ["Guilds", "Punishments"],
+				"summary": "Get guild appeal questions",
+				"description": "Returns active appeal questions for a guild if appeals are enabled",
+				"operationId": "getGuildAppealQuestionsById",
+				"parameters": [
+					{ "$ref": "#/components/parameters/GuildId" },
+					{ "$ref": "#/components/parameters/Authorization" }
+				],
+				"responses": {
+					"200": {
+						"description": "List of active appeal questions",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"type": "object",
+										"required": ["id", "question", "guildId", "active"],
+										"properties": {
+											"id": {
+												"type": "integer",
+												"description": "Question unique identifier"
+											},
+											"guildId": {
+												"type": "string",
+												"description": "Discord guild ID"
+											},
+											"question": {
+												"type": "string",
+												"description": "Appeal question text"
+											},
+											"active": {
+												"type": "boolean",
+												"description": "Whether question is active"
+											}
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"$ref": "#/components/responses/Unauthorized"
+					},
+					"403": {
+						"$ref": "#/components/responses/Forbidden"
+					},
+					"404": {
+						"$ref": "#/components/responses/NotFound"
+					}
+				},
+				"security": [
+					{
+						"BearerAuth": []
+					}
+				]
+			}
+		},
+		"/v1/guilds/{guildId}/settings/appeals": {
+			"get": {
+				"tags": ["Guilds", "Punishments"],
+				"summary": "Get guild appeal configuration",
+				"description": "Returns appeal settings and questions for a guild",
+				"operationId": "getGuildAppealSettingsById",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "guildId",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"pattern": "^\\d{17,19}$",
+							"description": "Discord guild snowflake"
+						}
+					},
+					{
+						"in": "header",
+						"name": "Authorization",
+						"required": true,
+						"description": "Bearer token",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Guild appeal settings",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": ["active", "questions"],
+									"properties": {
+										"active": {
+											"type": "boolean",
+											"description": "Whether appeals are enabled"
+										},
+										"questions": {
+											"type": "array",
+											"items": {
+												"$ref": "#/components/schemas/AppealQuestion"
+											}
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"$ref": "#/components/responses/Unauthorized"
+					},
+					"403": {
+						"$ref": "#/components/responses/Forbidden"
+					},
+					"404": {
+						"$ref": "#/components/responses/NotFound"
+					}
+				},
+				"security": [
+					{
+						"BearerAuth": ["user"]
+					}
+				]
+			}
+		},
+		"/v1/guilds/{guildId}/linked-roles/{settingsId}/decoration": {
+			"get": {
+				"tags": ["Guilds"],
+				"summary": "Handle OAuth2 flow for linked role decorations",
+				"description": "Processes OAuth2 code and sets up linked role connection",
+				"operationId": "getGuildLinkedRoleDecorationByIds",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "guildId",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"pattern": "^\\d{17,19}$",
+							"description": "Discord guild snowflake"
+						}
+					},
+					{
+						"in": "path",
+						"name": "settingsId",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"pattern": "^\\d{13}$",
+							"description": "Settings unique timestamp"
+						}
+					},
+					{
+						"in": "query",
+						"name": "code",
+						"required": false,
+						"schema": {
+							"type": "string",
+							"description": "OAuth2 authorization code"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Linked role connection set up successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": ["success", "message"],
+									"properties": {
+										"success": {
+											"type": "boolean",
+											"description": "Operation success status"
+										},
+										"message": {
+											"type": "string",
+											"description": "Success or error message"
+										}
+									}
+								}
+							}
+						}
+					},
+					"302": {
+						"description": "Redirect to OAuth2 authorization",
+						"headers": {
+							"Location": {
+								"schema": {
+									"type": "string",
+									"format": "uri"
+								},
+								"description": "OAuth2 authorization URL"
+							}
+						}
+					},
+					"400": {
+						"$ref": "#/components/responses/ValidationError"
+					},
+					"401": {
+						"$ref": "#/components/responses/Unauthorized"
+					},
+					"403": {
+						"$ref": "#/components/responses/Forbidden"
+					},
+					"404": {
+						"$ref": "#/components/responses/NotFound"
+					},
+					"424": {
+						"description": "Missing bot configuration (ID/Secret/Token)"
+					}
+				}
+			}
+		},
+		"/v1/url-scan": {
+			"post": {
+				"tags": ["URL-Scan"],
+				"summary": "Check if URL is allow/deny listed",
+				"operationId": "checkUrlScan",
+				"requestBody": {
+					"description": "Zod-validated body with { url: string }",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"url": { "type": "string", "format": "uri" }
+								},
+								"required": ["url"]
+							}
+						}
+					}
+				},
+				"responses": {
+					"202": { "description": "URL is allowlisted" },
+					"204": { "description": "URL is denylisted or bad" },
+					"404": { "description": "URL unknown" },
+					"400": { "description": "Invalid request body" }
+				}
+			},
+			"put": {
+				"tags": ["URL-Scan"],
+				"summary": "Queue a new scan request",
+				"operationId": "createUrlScan",
+				"parameters": [
+					{
+						"in": "header",
+						"name": "Authorization",
+						"description": "Bearer token",
+						"required": true,
+						"schema": { "type": "string" }
+					}
+				],
+				"requestBody": {
+					"description": "Body with { url: string } to queue scanning",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"url": { "type": "string", "format": "uri" }
+								},
+								"required": ["url"]
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Scan queued",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UrlScanQueued"
+								}
+							}
+						}
+					},
+					"208": {
+						"description": "Already queued or in known list"
+					},
+					"401": {
+						"$ref": "#/components/responses/Unauthorized"
+					},
+					"400": {
+						"$ref": "#/components/responses/ValidationError"
+					}
+				},
+				"security": [
+					{
+						"BearerAuth": ["user"]
+					}
+				]
+			},
+			"patch": {
+				"tags": ["URL-Scan"],
+				"summary": "Same as PUT but different endpoint usage",
+				"operationId": "updateUrlScan",
+				"parameters": [
+					{
+						"in": "header",
+						"name": "Authorization",
+						"description": "Bearer token",
+						"required": true,
+						"schema": { "type": "string" }
+					}
+				],
+				"requestBody": {
+					"description": "Body with { url: string }, validated by zod",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"url": { "type": "string", "format": "uri" }
+								},
+								"required": ["url"]
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Scan queued",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UrlScanQueued"
+								}
+							}
+						}
+					},
+					"208": { "description": "Already queued or in known list" },
+					"401": {
+						"$ref": "#/components/responses/Unauthorized"
+					},
+					"400": {
+						"$ref": "#/components/responses/ValidationError"
+					}
+				},
+				"security": [
+					{
+						"BearerAuth": ["user"]
+					}
+				]
+			}
+		},
+		"/v1/url-scan/{scanId}": {
+			"get": {
+				"tags": ["URL-Scan", "Debug"],
+				"summary": "Get URL scan results",
+				"description": "Returns the scan result status for a given scan ID",
+				"operationId": "getUrlScanByScanId",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "scanId",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+							"description": "UUID format scan identifier"
+						}
+					}
+				],
+				"responses": {
+					"202": {
+						"description": "URL is allowlisted"
+					},
+					"204": {
+						"description": "URL is denylisted or marked as bad"
+					},
+					"400": {
+						"$ref": "#/components/responses/ValidationError"
+					},
+					"404": {
+						"$ref": "#/components/responses/NotFound"
+					},
+					"409": {
+						"description": "Scan not completed yet"
+					},
+					"412": {
+						"description": "URL not in any list"
+					},
+					"419": {
+						"description": "Scan or ID expired"
+					}
+				}
+			}
+		},
+		"/v1/@me/punishments": {
+			"get": {
+				"tags": ["Me", "Punishments"],
+				"summary": "Get your punishments",
+				"operationId": "getUserPunishments",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "guildId",
+						"description": "Filter by guild ID",
+						"required": false,
+						"schema": {
+							"type": "string",
+							"pattern": "^\\d{17,19}$",
+							"description": "Discord guild snowflake"
+						}
+					},
+					{
+						"in": "header",
+						"name": "Authorization",
+						"description": "Bearer token",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "List of user's punishments",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"$ref": "#/components/schemas/PunishmentResponse"
+									}
+								}
+							}
+						}
+					},
+					"400": {
+						"$ref": "#/components/responses/ValidationError"
+					},
+					"403": {
+						"$ref": "#/components/responses/Forbidden"
+					}
+				},
+				"security": [
+					{
+						"BearerAuth": ["user"]
+					}
+				]
+			}
+		},
+		"/v1/@me/short-urls": {
+			"get": {
+				"tags": ["Me"],
+				"summary": "Get your short URLs",
+				"operationId": "getUserShortUrls",
+				"parameters": [
+					{
+						"in": "header",
+						"name": "Authorization",
+						"description": "Bearer token",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "List of short URLs with usage data",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"type": "object",
+										"properties": {
+											"id": { "type": "string" },
+											"forward": { "type": "string" },
+											"uses": { "type": "number" }
+										}
+									}
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"BearerAuth": ["user"]
+					}
+				]
+			}
+		},
+		"/v1/@me/short-urls/{shortUrlId}/uses": {
+			"get": {
+				"tags": ["Me"],
+				"summary": "Get short URL usage data",
+				"description": "Returns all usage timestamps for a specific short URL",
+				"operationId": "getShortUrlUsesById",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "shortUrlId",
+						"required": true,
+						"description": "Short URL identifier",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "header",
+						"name": "Authorization",
+						"description": "Bearer token",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "List of usage timestamps",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"type": "object",
+										"required": ["id", "timestamp"],
+										"properties": {
+											"id": {
+												"type": "string",
+												"description": "Short URL identifier"
+											},
+											"timestamp": {
+												"type": "number",
+												"description": "Usage timestamp in milliseconds"
+											}
+										}
+									}
+								}
+							}
+						}
+					},
+					"403": {
+						"$ref": "#/components/responses/Forbidden"
+					},
+					"404": {
+						"$ref": "#/components/responses/NotFound"
+					}
+				}
+			}
+		},
+		"/v1/@me/appeals/guilds": {
+			"get": {
+				"tags": ["Me", "Guilds", "Punishments"],
+				"summary": "Get guilds with appeal settings",
+				"description": "Returns mutual guilds split by appeal settings status",
+				"operationId": "getUserAppealGuilds",
+				"parameters": [
+					{
+						"in": "header",
+						"name": "Authorization",
+						"description": "Bearer token",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Guild lists by appeal status",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": ["appealEnabled", "otherMutuals"],
+									"properties": {
+										"appealEnabled": {
+											"type": "array",
+											"items": {
+												"$ref": "#/components/schemas/PartialGuild"
+											}
+										},
+										"otherMutuals": {
+											"type": "array",
+											"items": {
+												"$ref": "#/components/schemas/PartialGuild"
+											}
+										}
+									}
+								}
+							}
+						}
+					},
+					"403": {
+						"$ref": "#/components/responses/Forbidden"
+					}
+				},
+				"security": [
+					{
+						"BearerAuth": ["user"]
+					}
+				]
+			}
+		},
+		"/v1/@me/auth/generate": {
+			"post": {
+				"tags": ["Me", "Users"],
+				"summary": "Generate new API token",
+				"description": "Generates and returns a new API token for the authenticated user",
+				"operationId": "createUserAuthToken",
+				"parameters": [
+					{
+						"in": "header",
+						"name": "Authorization",
+						"description": "Bearer token",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "New API token generated",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": ["token"],
+									"properties": {
+										"token": {
+											"type": "string",
+											"description": "The new API token"
+										}
+									}
+								}
+							}
+						}
+					},
+					"403": {
+						"$ref": "#/components/responses/Forbidden"
+					},
+					"500": {
+						"description": "Failed to generate API token"
+					}
+				},
+				"security": [
+					{
+						"BearerAuth": ["user"]
+					}
+				]
+			}
+		},
+		"/v1/bot/reviews": {
+			"get": {
+				"tags": ["Bot"],
+				"summary": "Fetch top.gg reviews",
+				"operationId": "getBotReviews",
+				"responses": {
+					"200": {
+						"description": "List of reviews",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"type": "object",
+										"properties": {
+											"content": { "type": "string" },
+											"score": { "type": "number" },
+											"userid": { "type": "string" },
+											"avatar": { "type": "string" }
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/coffee": {
+			"get": {
+				"tags": ["Debug"],
+				"summary": "Request coffee service",
+				"description": "Always returns a teapot error because we don't serve coffee",
+				"operationId": "getCoffee",
+				"responses": {
+					"418": {
+						"description": "I'm a teapot",
+						"content": {
+							"text/plain": {
+								"schema": {
+									"type": "string",
+									"example": "I'm a teapot"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/github/issues": {
+			"post": {
+				"tags": ["GitHub", "Bot"],
+				"summary": "Create GitHub issue via Discord interaction",
+				"operationId": "createGitHubIssue",
+				"parameters": [
+					{
+						"in": "header",
+						"name": "X-Signature-Ed25519",
+						"required": true,
+						"schema": {
+							"type": "string"
+						},
+						"description": "Discord interaction signature"
+					},
+					{
+						"in": "header",
+						"name": "X-Signature-Timestamp",
+						"required": true,
+						"schema": {
+							"type": "string"
+						},
+						"description": "Discord interaction timestamp"
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"required": ["type", "application_id"],
+								"properties": {
+									"type": {
+										"type": "integer",
+										"enum": [1, 2, 4]
+									},
+									"application_id": {
+										"type": "string"
+									},
+									"data": {
+										"type": "object",
+										"properties": {
+											"options": {
+												"type": "array",
+												"items": {
+													"type": "object",
+													"properties": {
+														"name": {
+															"type": "string"
+														},
+														"value": {
+															"type": "string"
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Discord interaction response",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"type": {
+											"type": "integer",
+											"enum": [1, 4]
+										},
+										"data": {
+											"type": "object",
+											"properties": {
+												"content": {
+													"type": "string"
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"$ref": "#/components/responses/Unauthorized"
+					},
+					"406": {
+						"description": "Unhandled interaction type"
+					}
+				}
+			}
+		},
+		"/interactions": {
+			"post": {
+				"tags": ["Bot"],
+				"summary": "Handle Discord interactions",
+				"description": "Validates and processes Discord interaction payloads",
+				"operationId": "createInteraction",
+				"parameters": [
+					{
+						"in": "header",
+						"name": "X-Signature-Ed25519",
+						"required": true,
+						"schema": {
+							"type": "string"
+						},
+						"description": "Discord interaction signature"
+					},
+					{
+						"in": "header",
+						"name": "X-Signature-Timestamp",
+						"required": true,
+						"schema": {
+							"type": "string"
+						},
+						"description": "Discord interaction timestamp"
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"required": ["application_id", "type"],
+								"properties": {
+									"application_id": {
+										"type": "string"
+									},
+									"type": {
+										"type": "integer",
+										"enum": [1, 2, 3, 4, 5]
+									}
+								}
+							}
+						}
+					}
+				},
+				"responses": {
+					"204": {
+						"description": "Interaction acknowledged and processed"
+					},
+					"200": {
+						"description": "Ping response",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"type": {
+											"type": "integer",
+											"enum": [1]
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"$ref": "#/components/responses/Unauthorized"
+					}
+				}
+			}
+		},
+		"/interactions/kori": {
+			"post": {
+				"tags": ["Bot"],
+				"summary": "Handle Kori bot interactions",
+				"description": "Discord interaction endpoint for Kori bot migration info",
+				"operationId": "createKoriInteraction",
+				"parameters": [
+					{
+						"in": "header",
+						"name": "X-Signature-Ed25519",
+						"required": true,
+						"schema": {
+							"type": "string"
+						},
+						"description": "Discord interaction signature"
+					},
+					{
+						"in": "header",
+						"name": "X-Signature-Timestamp",
+						"required": true,
+						"schema": {
+							"type": "string"
+						},
+						"description": "Discord interaction timestamp"
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"required": ["type", "application_id"],
+								"properties": {
+									"type": {
+										"type": "integer",
+										"enum": [1, 2],
+										"description": "Discord interaction type - ping(1) or command(2)"
+									},
+									"application_id": {
+										"type": "string"
+									}
+								}
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Migration message or ping response",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"type": {
+											"type": "integer",
+											"enum": [1, 4],
+											"description": "Response type - pong(1) or message(4)"
+										},
+										"data": {
+											"type": "object",
+											"properties": {
+												"flags": {
+													"type": "integer",
+													"description": "Message flags (ephemeral=64)"
+												},
+												"components": {
+													"type": "array",
+													"items": {
+														"$ref": "#/components/schemas/ActionRow"
+													}
+												},
+												"embeds": {
+													"type": "array",
+													"items": {
+														"$ref": "#/components/schemas/Embed"
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					},
+					"204": {
+						"description": "Interaction acknowledged"
+					},
+					"401": {
+						"$ref": "#/components/responses/Unauthorized"
+					}
+				}
+			}
+		},
+		"/login": {
+			"get": {
+				"tags": ["Me"],
+				"summary": "Login with Discord OAuth2",
+				"description": "Exchange OAuth2 code for access token and user info",
+				"operationId": "getLogin",
+				"parameters": [
+					{
+						"in": "header",
+						"name": "Authorization",
+						"required": true,
+						"description": "Bearer {oauth2_code}",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "state",
+						"required": false,
+						"description": "Guild ID for custom client settings",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "redirect_uri",
+						"required": false,
+						"description": "OAuth2 redirect URI",
+						"schema": {
+							"type": "string",
+							"format": "uri"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Login successful",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": ["id", "username", "avatar", "expires", "access_token"],
+									"properties": {
+										"id": {
+											"type": "string",
+											"description": "Discord user ID"
+										},
+										"username": {
+											"type": "string"
+										},
+										"avatar": {
+											"type": "string",
+											"format": "uri",
+											"description": "User avatar URL"
+										},
+										"expires": {
+											"type": "integer",
+											"description": "Token expiry in seconds"
+										},
+										"access_token": {
+											"type": "string",
+											"description": "Discord OAuth2 access token"
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"$ref": "#/components/responses/Unauthorized"
+					}
+				}
+			}
+		},
+		"/metrics": {
+			"get": {
+				"tags": ["Debug", "Bot"],
+				"summary": "Get Prometheus metrics",
+				"description": "Returns merged metrics from all services in Prometheus format",
+				"operationId": "getMetrics",
+				"parameters": [
+					{
+						"in": "header",
+						"name": "Authorization",
+						"required": true,
+						"description": "Bearer {metrics_token}",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Prometheus metrics data",
+						"content": {
+							"text/plain; version=0.0.4; charset=utf-8": {
+								"schema": {
+									"type": "string",
+									"description": "Raw Prometheus metrics format"
+								}
+							}
+						}
+					},
+					"401": {
+						"$ref": "#/components/responses/Unauthorized"
+					},
+					"403": {
+						"$ref": "#/components/responses/Forbidden"
+					}
+				},
+				"security": [
+					{
+						"BotAuth": ["bot"]
+					}
+				]
+			}
+		},
+		"/robots.txt": {
+			"get": {
+				"tags": ["Debug"],
+				"summary": "Get robots.txt rules",
+				"description": "Returns robots.txt content with allowed/disallowed paths",
+				"operationId": "getRobotsTxt",
+				"responses": {
+					"200": {
+						"description": "Robots.txt content",
+						"content": {
+							"text/plain": {
+								"schema": {
+									"type": "string",
+									"example": "User-agent: *\nAllow: /artworks\nDisallow: /v1"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/topggvotes": {
+			"post": {
+				"tags": ["Bot"],
+				"summary": "Handle top.gg vote webhook",
+				"description": "Legacy endpoint for logging votes from top.gg",
+				"operationId": "postTopggVotes",
+				"responses": {
+					"200": {
+						"description": "Vote logged successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": ["success"],
+									"properties": {
+										"success": {
+											"type": "boolean",
+											"example": true
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/votes/topgg": {
+			"post": {
+				"tags": ["Bot"],
+				"summary": "Handle top.gg vote webhook",
+				"description": "Processes and validates incoming vote webhooks from top.gg",
+				"operationId": "postVoteTopgg",
+				"parameters": [
+					{
+						"in": "header",
+						"name": "authorization",
+						"required": true,
+						"description": "Webhook authentication token",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"required": ["bot", "user", "type"],
+								"properties": {
+									"bot": {
+										"type": "string",
+										"pattern": "^\\d{17,19}$",
+										"description": "Bot ID"
+									},
+									"user": {
+										"type": "string",
+										"pattern": "^\\d{17,19}$",
+										"description": "User ID who voted"
+									},
+									"type": {
+										"type": "string",
+										"pattern": "^(test|upvote)$",
+										"description": "Vote type"
+									},
+									"isWeekend": {
+										"type": "boolean",
+										"description": "Whether vote was cast during weekend"
+									},
+									"query": {
+										"type": "string",
+										"description": "Optional query parameters"
+									}
+								}
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Vote processed successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": ["success"],
+									"properties": {
+										"success": {
+											"type": "boolean",
+											"description": "Vote processing status"
+										}
+									}
+								}
+							}
+						}
+					},
+					"400": {
+						"$ref": "#/components/responses/ValidationError"
+					},
+					"498": {
+						"description": "Invalid webhook token",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"message": {
+											"type": "string",
+											"example": "Invalid token"
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/v1/@me/guilds": {
+			"get": {
+				"tags": ["Me"],
+				"summary": "Get user's guilds",
+				"description": "Returns guilds the authenticated user is in, with bot presence info",
+				"operationId": "getUserGuilds",
+				"parameters": [
+					{
+						"in": "header",
+						"name": "Authorization",
+						"description": "Bearer token",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "List of guilds with bot info",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"allOf": [
+											{
+												"$ref": "#/components/schemas/DiscordPartialGuild"
+											},
+											{
+												"type": "object",
+												"properties": {
+													"hasBot": {
+														"type": "boolean",
+														"description": "Whether Ayako bot is in this guild"
+													}
+												}
+											}
+										]
+									}
+								}
+							}
+						}
+					},
+					"403": {
+						"$ref": "#/components/responses/Forbidden"
+					}
+				},
+				"security": [
+					{
+						"BearerAuth": ["user"]
+					}
+				]
+			}
+		},
+		"/v1/@me/reminders": {
+			"get": {
+				"tags": ["Me"],
+				"summary": "Get user's reminders",
+				"description": "Returns all reminders for the authenticated user",
+				"operationId": "getUserReminders",
+				"parameters": [
+					{
+						"in": "header",
+						"name": "Authorization",
+						"description": "Bearer token",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "List of user's reminders",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"type": "object",
+										"required": ["id", "endtime", "content", "userid", "guildid", "channelid"],
+										"properties": {
+											"id": {
+												"type": "number",
+												"description": "Unique reminder ID"
+											},
+											"endtime": {
+												"type": "number",
+												"description": "When reminder expires",
+												"format": "date-time"
+											},
+											"content": {
+												"type": "string",
+												"description": "Reminder message"
+											},
+											"userid": {
+												"type": "string",
+												"description": "Discord user ID"
+											},
+											"guildid": {
+												"type": "string",
+												"description": "Discord guild ID"
+											},
+											"channelid": {
+												"type": "string",
+												"description": "Discord channel ID"
+											}
+										}
+									}
+								}
+							}
+						}
+					},
+					"403": {
+						"$ref": "#/components/responses/Forbidden"
+					}
+				},
+				"security": [
+					{
+						"BearerAuth": ["user"]
+					}
+				]
+			}
+		},
+		"/v1/reminders/{reminderId}": {
+			"get": {
+				"tags": ["Me"],
+				"summary": "Get a specific reminder",
+				"description": "Returns details about a specific reminder for the authenticated user",
+				"operationId": "getReminderById",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "reminderId",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"description": "Reminder unique timestamp"
+						}
+					},
+					{
+						"in": "header",
+						"name": "Authorization",
+						"required": true,
+						"description": "Bearer token",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Reminder details",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": ["id", "endtime", "content", "userid", "guildid", "channelid"],
+									"properties": {
+										"id": {
+											"type": "integer",
+											"description": "Unique reminder ID"
+										},
+										"endtime": {
+											"type": "integer",
+											"description": "When reminder expires"
+										},
+										"content": {
+											"type": "string",
+											"description": "Reminder message"
+										},
+										"userid": {
+											"type": "string",
+											"description": "Discord user ID"
+										},
+										"guildid": {
+											"type": "string",
+											"description": "Discord guild ID"
+										},
+										"channelid": {
+											"type": "string",
+											"description": "Discord channel ID"
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"$ref": "#/components/responses/Unauthorized"
+					},
+					"403": {
+						"$ref": "#/components/responses/Forbidden"
+					},
+					"404": {
+						"$ref": "#/components/responses/NotFound"
+					}
+				},
+				"security": [
+					{
+						"BearerAuth": []
+					}
+				]
+			},
+			"delete": {
+				"tags": ["Me"],
+				"summary": "Delete a reminder",
+				"description": "Deletes a specific reminder for the authenticated user",
+				"operationId": "deleteReminderById",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "reminderId",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"description": "Reminder unique timestamp"
+						}
+					},
+					{
+						"in": "header",
+						"name": "Authorization",
+						"required": true,
+						"description": "Bearer token",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"204": {
+						"description": "Reminder successfully deleted"
+					},
+					"401": {
+						"$ref": "#/components/responses/Unauthorized"
+					},
+					"403": {
+						"$ref": "#/components/responses/Forbidden"
+					},
+					"404": {
+						"$ref": "#/components/responses/NotFound"
+					}
+				},
+				"security": [
+					{
+						"BearerAuth": []
+					}
+				]
+			}
+		},
+		"/v1/reminders": {
+			"post": {
+				"tags": ["Me"],
+				"summary": "Create a new reminder",
+				"description": "Creates a new reminder for the authenticated user",
+				"operationId": "createReminder",
+				"parameters": [
+					{
+						"in": "header",
+						"name": "Authorization",
+						"description": "Bearer or Bot token",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"required": ["content", "endtime"],
+								"properties": {
+									"content": {
+										"type": "string",
+										"minLength": 1,
+										"maxLength": 2000,
+										"description": "Reminder message content"
+									},
+									"endtime": {
+										"type": "integer",
+										"minimum": 0,
+										"maximum": 9007199254740991,
+										"description": "When the reminder should trigger (Unix timestamp ms)"
+									}
+								}
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Reminder created successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": ["id", "endtime", "userid", "reason", "channelid"],
+									"properties": {
+										"id": {
+											"type": "integer",
+											"description": "Unique reminder ID"
+										},
+										"endtime": {
+											"type": "integer",
+											"description": "When reminder will trigger"
+										},
+										"userid": {
+											"type": "string",
+											"description": "Discord user ID"
+										},
+										"reason": {
+											"type": "string",
+											"description": "Reminder content"
+										},
+										"channelid": {
+											"type": "string",
+											"description": "Discord channel ID or 'Website'"
+										}
+									}
+								}
+							}
+						}
+					},
+					"400": {
+						"$ref": "#/components/responses/ValidationError"
+					},
+					"403": {
+						"$ref": "#/components/responses/Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"message": {
+											"type": "string",
+											"example": "Invalid or no token provided"
+										}
+									}
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"BearerAuth": ["user"]
+					}
+				]
+			},
+			"get": {
+				"tags": ["Me"],
+				"summary": "Get all reminders",
+				"description": "Returns a list of all reminders across users, requires bot authorization",
+				"operationId": "getReminders",
+				"parameters": [
+					{
+						"in": "header",
+						"name": "Authorization",
+						"description": "Bot token only",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "List of all reminders",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"type": "object",
+										"required": ["id", "endtime", "userid", "reason", "channelid"],
+										"properties": {
+											"id": {
+												"type": "integer",
+												"description": "Reminder unique ID"
+											},
+											"endtime": {
+												"type": "integer",
+												"description": "When the reminder triggers (Unix timestamp ms)"
+											},
+											"userid": {
+												"type": "string",
+												"description": "Discord user ID"
+											},
+											"reason": {
+												"type": "string",
+												"description": "Reminder content"
+											},
+											"channelid": {
+												"type": "string",
+												"description": "Discord channel ID or 'Website'"
+											}
+										}
+									}
+								}
+							}
+						}
+					},
+					"403": {
+						"$ref": "#/components/responses/Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"message": {
+											"type": "string",
+											"example": "Invalid or no token provided"
+										}
+									}
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"BotAuth": ["bot"]
+					}
+				]
+			}
+		},
+		"/v1/@me/rp": {
+			"get": {
+				"tags": ["Me"],
+				"summary": "Get user's blocked commands",
+				"description": "Returns list of blocked commands for each user",
+				"operationId": "getUserBlockedCommands",
+				"parameters": [
+					{
+						"in": "header",
+						"name": "Authorization",
+						"description": "Bearer token",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "List of blocked commands by user",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"type": "object",
+										"required": ["commands", "user"],
+										"properties": {
+											"commands": {
+												"type": "array",
+												"items": {
+													"type": "string"
+												},
+												"description": "List of blocked command names"
+											},
+											"user": {
+												"type": "string",
+												"description": "Discord user ID or '0' for global"
+											}
+										}
+									}
+								}
+							}
+						}
+					},
+					"403": {
+						"$ref": "#/components/responses/Forbidden"
+					}
+				},
+				"security": [
+					{
+						"BearerAuth": ["user"]
+					}
+				]
+			},
+			"patch": {
+				"tags": ["Me"],
+				"summary": "Update command block status",
+				"operationId": "updateBlockedCommand",
+				"parameters": [
+					{
+						"in": "header",
+						"name": "Authorization",
+						"description": "Bearer token",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"required": ["command", "enabled", "userId"],
+								"properties": {
+									"command": {
+										"type": "string",
+										"description": "Command name"
+									},
+									"enabled": {
+										"type": "boolean",
+										"description": "Whether to enable/disable command"
+									},
+									"userId": {
+										"type": "string",
+										"pattern": "^(0|\\d{17,19})$",
+										"description": "User ID or '0' for global"
+									}
+								}
+							}
+						}
+					}
+				},
+				"responses": {
+					"204": {
+						"description": "Command block status updated"
+					},
+					"400": {
+						"$ref": "#/components/responses/ValidationError"
+					},
+					"403": {
+						"$ref": "#/components/responses/Forbidden"
+					}
+				},
+				"security": [
+					{
+						"BearerAuth": ["user"]
+					}
+				]
+			},
+			"post": {
+				"tags": ["Me"],
+				"summary": "Block a command",
+				"operationId": "blockCommand",
+				"parameters": [
+					{
+						"in": "header",
+						"name": "Authorization",
+						"description": "Bearer token",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"required": ["command", "userId"],
+								"properties": {
+									"command": {
+										"type": "string",
+										"description": "Command name"
+									},
+									"userId": {
+										"type": "string",
+										"pattern": "^\\d{17,19}$",
+										"description": "Discord user ID"
+									}
+								}
+							}
+						}
+					}
+				},
+				"responses": {
+					"204": {
+						"description": "Command blocked"
+					},
+					"400": {
+						"$ref": "#/components/responses/ValidationError"
+					},
+					"403": {
+						"$ref": "#/components/responses/Forbidden"
+					}
+				},
+				"security": [
+					{
+						"BearerAuth": ["user"]
+					}
+				]
+			},
+			"delete": {
+				"tags": ["Me"],
+				"summary": "Unblock a command",
+				"operationId": "unblockCommand",
+				"parameters": [
+					{
+						"in": "header",
+						"name": "Authorization",
+						"description": "Bearer token",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"type": "object",
+						"required": ["command", "userId"],
+						"properties": {
+							"command": {
+								"type": "string",
+								"description": "Command name"
+							},
+							"userId": {
+								"type": "string",
+								"pattern": "^\\d{17,19}$",
+								"description": "Discord user ID"
+							}
+						}
+					}
+				}
+			},
+			"responses": {
+				"204": {
+					"description": "Command unblocked"
+				},
+				"400": {
+					"$ref": "#/components/responses/ValidationError"
+				},
+				"403": {
+					"$ref": "#/components/responses/Forbidden"
+				}
+			}
+		},
+		"/v1/@me": {
+			"get": {
+				"tags": ["Me"],
+				"summary": "Get user profile",
+				"description": "Returns authenticated user's profile information",
+				"operationId": "getUserProfile",
+				"parameters": [
+					{
+						"in": "header",
+						"name": "Authorization",
+						"description": "Bearer token",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "User profile data",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": ["id", "name", "avatar", "socials", "votereminders"],
+									"properties": {
+										"id": {
+											"type": "string",
+											"description": "Discord user ID"
+										},
+										"name": {
+											"type": "string",
+											"description": "Username"
+										},
+										"avatar": {
+											"type": "string",
+											"format": "uri",
+											"description": "Avatar URL"
+										},
+										"socials": {
+											"type": "array",
+											"items": {
+												"type": "object",
+												"required": ["type", "url"],
+												"properties": {
+													"type": {
+														"type": "string",
+														"description": "Social media platform"
+													},
+													"url": {
+														"type": "string",
+														"format": "uri",
+														"description": "Profile URL"
+													}
+												}
+											}
+										},
+										"votereminders": {
+											"type": "boolean",
+											"description": "Whether vote reminders are enabled"
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"$ref": "#/components/responses/Unauthorized"
+					}
+				},
+				"security": [
+					{
+						"BearerAuth": ["user"]
+					}
+				]
+			}
+		},
+		"/v1/bot/artworks": {
+			"get": {
+				"tags": ["Bot"],
+				"summary": "Get verified artworks",
+				"description": "Returns list of verified artworks with optional type/search filtering",
+				"operationId": "getArtworks",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "q",
+						"description": "Search query",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "type",
+						"description": "Artwork type filter",
+						"required": false,
+						"schema": {
+							"type": "string",
+							"enum": ["emoji", "full", "icon"]
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "List of artworks",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"type": "object",
+										"required": ["user", "art"],
+										"properties": {
+											"user": {
+												"type": "object",
+												"properties": {
+													"username": {
+														"type": "string",
+														"description": "Artist username"
+													},
+													"avatar": {
+														"type": "string",
+														"format": "uri",
+														"description": "Artist avatar URL"
+													},
+													"socials": {
+														"type": "array",
+														"items": {
+															"type": "object",
+															"required": ["type", "url"],
+															"properties": {
+																"type": {
+																	"type": "string",
+																	"description": "Social platform"
+																},
+																"url": {
+																	"type": "string",
+																	"format": "uri",
+																	"description": "Social profile URL"
+																}
+															}
+														}
+													}
+												}
+											},
+											"art": {
+												"type": "object",
+												"required": ["url", "type", "created"],
+												"properties": {
+													"url": {
+														"type": "string",
+														"format": "uri",
+														"description": "Artwork URL"
+													},
+													"type": {
+														"type": "string",
+														"enum": ["emoji", "full", "icon"],
+														"description": "Artwork type"
+													},
+													"created": {
+														"type": "number",
+														"description": "Creation timestamp"
+													},
+													"description": {
+														"type": "string",
+														"nullable": true,
+														"description": "Optional artwork description"
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					},
+					"400": {
+						"$ref": "#/components/responses/ValidationError"
+					}
+				}
+			}
+		},
+		"/v1/bot/contributors": {
+			"get": {
+				"tags": ["Bot"],
+				"summary": "Get bot contributors",
+				"description": "Returns list of contributors with their roles and social links",
+				"operationId": "getContributors",
+				"responses": {
+					"200": {
+						"description": "List of contributors",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"type": "object",
+										"required": ["userid", "roles", "socials"],
+										"properties": {
+											"userid": {
+												"type": "string",
+												"description": "Discord user ID"
+											},
+											"roles": {
+												"type": "array",
+												"items": {
+													"type": "string"
+												},
+												"description": "Contribution roles"
+											},
+											"username": {
+												"type": "string",
+												"description": "Discord username",
+												"nullable": true
+											},
+											"avatar": {
+												"type": "string",
+												"format": "uri",
+												"description": "Avatar URL",
+												"nullable": true
+											},
+											"socials": {
+												"type": "array",
+												"items": {
+													"type": "object",
+													"required": ["type", "url"],
+													"properties": {
+														"type": {
+															"type": "string",
+															"description": "Social platform"
+														},
+														"url": {
+															"type": "string",
+															"format": "uri",
+															"description": "Social profile URL"
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/v1/bot/features": {
+			"get": {
+				"tags": ["Bot"],
+				"summary": "Get bot features in chunks",
+				"description": "Returns paginated bot features divided into blocks",
+				"operationId": "getFeatures",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "blocks",
+						"required": true,
+						"schema": {
+							"type": "integer"
+						},
+						"description": "Number of blocks to divide features into"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Feature blocks",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"type": "array",
+										"items": {
+											"type": "object",
+											"required": ["title", "subtitle", "image", "placeholder"],
+											"properties": {
+												"title": {
+													"type": "string",
+													"description": "Feature title"
+												},
+												"subtitle": {
+													"type": "string",
+													"description": "Feature subtitle"
+												},
+												"image": {
+													"type": "string",
+													"format": "uri",
+													"description": "Feature image URL"
+												},
+												"placeholder": {
+													"type": "string",
+													"description": "Feature placeholder text"
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					},
+					"400": {
+						"$ref": "#/components/responses/ValidationError"
+					}
+				}
+			}
+		},
+		"/v1/bot/stats": {
+			"get": {
+				"tags": ["Bot", "Debug"],
+				"summary": "Get bot statistics",
+				"description": "Returns current bot guild and user statistics",
+				"operationId": "getBotStats",
+				"responses": {
+					"200": {
+						"description": "Bot statistics",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": ["guildCount", "userCount", "guildInstallCount", "userInstallCount"],
+									"properties": {
+										"guildCount": {
+											"type": "integer",
+											"description": "Number of guilds bot is in"
+										},
+										"userCount": {
+											"type": "integer",
+											"description": "Total number of users"
+										},
+										"guildInstallCount": {
+											"type": "integer",
+											"description": "Number of guild installations"
+										},
+										"userInstallCount": {
+											"type": "integer",
+											"description": "Number of user installations"
+										}
+									}
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "No statistics available"
+					}
+				},
+				"security": [
+					{
+						"BotAuth": ["bot"]
+					}
+				]
+			}
+		},
+		"/v1/qotd": {
+			"get": {
+				"tags": ["Bot"],
+				"summary": "Get question of the day",
+				"description": "Returns a random question based on the current UTC date",
+				"operationId": "getQOTD",
+				"responses": {
+					"200": {
+						"description": "Question of the day",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": ["question"],
+									"properties": {
+										"question": {
+											"type": "string",
+											"description": "The daily question text"
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/v1/users/find-many": {
+			"put": {
+				"tags": ["Users"],
+				"summary": "Find multiple users",
+				"description": "Returns cached user data for multiple user IDs",
+				"operationId": "findManyUsersById",
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"required": ["userIds"],
+								"properties": {
+									"userIds": {
+										"type": "array",
+										"items": {
+											"type": "string",
+											"pattern": "^\\d{17,19}$"
+										},
+										"minItems": 1,
+										"maxItems": 1000,
+										"description": "Array of Discord user IDs to look up"
+									}
+								}
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Array of found users",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"type": "object",
+										"properties": {
+											"id": {
+												"type": "string",
+												"description": "Discord user ID"
+											},
+											"username": {
+												"type": "string",
+												"description": "User's discord name"
+											},
+											"discriminator": {
+												"type": "string",
+												"description": "User's discriminator"
+											},
+											"avatar": {
+												"type": "string",
+												"nullable": true,
+												"description": "Avatar hash"
+											}
+										}
+									}
+								}
+							}
+						}
+					},
+					"400": {
+						"$ref": "#/components/responses/ValidationError"
+					}
+				}
+			}
+		},
+		"/v1/users/search": {
+			"get": {
+				"tags": ["Users"],
+				"summary": "Search for users",
+				"description": "Search for Discord users by username with cached data",
+				"operationId": "searchUsers",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "query",
+						"description": "Search query",
+						"required": false,
+						"schema": {
+							"type": "string",
+							"pattern": "^(?!.*[@#:```])(?!.*\\b(?:everyone|here|system message|discord)\\b)(?!.*discord)[^\\s]{2,32}$",
+							"description": "Username search string, minimum 2 chars, no special characters"
+						}
+					},
+					{
+						"in": "query",
+						"name": "max",
+						"description": "Maximum results to return",
+						"required": false,
+						"schema": {
+							"type": "integer",
+							"maximum": 25,
+							"default": 25,
+							"description": "Maximum number of users to return"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Array of matching users",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"type": "object",
+										"required": ["id", "username"],
+										"properties": {
+											"id": {
+												"type": "string",
+												"description": "Discord user ID"
+											},
+											"username": {
+												"type": "string",
+												"description": "Discord username"
+											},
+											"global_name": {
+												"type": "string",
+												"nullable": true,
+												"description": "Global display name"
+											}
+										}
+									}
+								}
+							}
+						}
+					},
+					"400": {
+						"$ref": "#/components/responses/ValidationError"
+					},
+					"404": {
+						"$ref": "#/components/responses/NotFound"
+					}
+				}
+			}
+		}
+	},
+	"components": {
+		"securitySchemes": {
+			"BearerAuth": {
+				"type": "http",
+				"scheme": "bearer",
+				"bearerFormat": "JWT",
+				"description": "JWT token or Discord OAuth2 token. Required for authenticated endpoints.",
+				"x-scopes": {
+					"user": "Access to user-specific resources",
+					"bot": "Access to bot management resources",
+					"admin": "Access to administrative resources"
+				}
+			},
+			"BotAuth": {
+				"type": "http",
+				"scheme": "bearer",
+				"bearerFormat": "Bot",
+				"description": "Discord bot token for bot-only endpoints",
+				"x-scopes": {
+					"bot": "Access to bot-specific resources"
+				}
+			}
+		},
+		"responses": {
+			"NotFound": {
+				"description": "Resource not found",
+				"content": {
+					"application/json": {
+						"schema": {
+							"$ref": "#/components/schemas/Error"
+						}
+					}
+				}
+			},
+			"Unauthorized": {
+				"description": "Unauthorized access",
+				"content": {
+					"application/json": {
+						"schema": {
+							"$ref": "#/components/schemas/Error"
+						}
+					}
+				}
+			},
+			"Forbidden": {
+				"description": "Access forbidden",
+				"content": {
+					"application/json": {
+						"schema": {
+							"$ref": "#/components/schemas/Error"
+						}
+					}
+				}
+			},
+			"ValidationError": {
+				"description": "Invalid request parameters",
+				"content": {
+					"application/json": {
+						"schema": {
+							"$ref": "#/components/schemas/ValidationError"
+						}
+					}
+				}
+			},
+			"DebugInfo": {
+				"description": "Debugging information about the API service",
+				"content": {
+					"application/json": {
+						"schema": {
+							"type": "object",
+							"properties": {
+								"message": {
+									"type": "string",
+									"description": "Debug status message",
+									"example": "API is running normally"
+								}
+							}
+						}
+					}
+				}
+			},
+			"Error": {
+				"description": "Standard error response",
+				"content": {
+					"application/json": {
+						"schema": {
+							"$ref": "#/components/schemas/Error"
+						}
+					}
+				}
+			},
+			"ServerError": {
+				"description": "Internal server error",
+				"content": {
+					"application/json": {
+						"schema": {
+							"$ref": "#/components/schemas/Error"
+						}
+					}
+				}
+			}
+		},
+		"parameters": {
+			"Authorization": {
+				"in": "header",
+				"name": "Authorization",
+				"required": true,
+				"description": "Bearer authentication token",
+				"schema": {
+					"type": "string",
+					"pattern": "^Bearer [A-Za-z0-9-_=]+\\.[A-Za-z0-9-_=]+\\.?[A-Za-z0-9-_.+/=]*$",
+					"example": "Bearer eyJhbGciOiJS..."
+				}
+			},
+			"GuildId": {
+				"in": "path",
+				"name": "guildId",
+				"required": true,
+				"schema": {
+					"type": "string",
+					"pattern": "^\\d{17,19}$",
+					"description": "Discord guild snowflake",
+					"example": "123456789012345678"
+				}
+			},
+			"PunishmentId": {
+				"in": "path",
+				"name": "punishmentId",
+				"required": true,
+				"schema": {
+					"type": "string",
+					"pattern": "^\\d+$",
+					"description": "Punishment identifier"
+				}
+			}
+		},
+		"schemas": {
+			"PunishmentResponse": {
+				"type": "object",
+				"description": "Details about a moderation punishment",
+					"required": ["id", "type", "reason"],
+				"properties": {
+					"appealed": {
+						"type": "boolean",
+						"description": "Whether the punishment has been appealed",
+						"example": false
+					},
+					"type": {
+						"type": "string",
+						"description": "Type of punishment (ban, mute, warn, etc)",
+						"example": "ban",
+						"enum": [
+							"bans",
+							"channelbans",
+							"kicks",
+							"mutes",
+							"warns",
+							"tempchannelbans",
+							"tempbans",
+							"tempmutes"
+						]
+					},
+					"id": {
+						"type": "number",
+						"description": "Unique identifier for the punishment",
+						"example": 12345,
+						"readOnly": true
+					},
+					"reason": {
+						"type": "string",
+						"description": "Reason for the punishment",
+						"example": "Violation of community guidelines"
+					},
+					"duration": {
+						"type": "number",
+						"nullable": true,
+						"description": "Duration of the punishment in milliseconds, if applicable",
+						"example": 3600000
+					},
+					"channel": {
+						"type": "object",
+						"description": "Channel where the punishment was issued",
+						"properties": {
+							"name": {
+								"type": "string",
+								"description": "Name of the channel",
+								"example": "general"
+							},
+							"id": {
+								"type": "string",
+								"description": "Unique identifier for the channel",
+								"example": "123456789012345678"
+							}
+						}
+					},
+					"createdAt": {
+						"type": "string",
+						"format": "date-time", 
+						"description": "When the punishment was created",
+						"readOnly": true
+					},
+					"modifiedAt": {
+						"type": "string",
+						"format": "date-time",
+						"description": "When the punishment was last modified",
+						"readOnly": true
+					},
+					"status": {
+						"type": "string",
+						"enum": ["accepted", "rejected", "pending"]
+					}
+				}
+			},
+			"GuildEntry": {
+				"type": "object",
+				"description": "Basic information about a Discord guild",
+				"properties": {
+					"guildId": {
+						"type": "string",
+						"description": "Discord snowflake ID of the guild",
+						"example": "123456789012345678"
+					},
+					"name": {
+						"type": "string",
+						"description": "Name of the guild",
+						"example": "Example Guild"
+					},
+					"icon": {
+						"type": "string",
+						"nullable": true,
+						"description": "Icon hash of the guild",
+						"example": "a_1234567890abcdef"
+					},
+					"banner": {
+						"type": "string",
+						"nullable": true,
+						"description": "Banner hash of the guild",
+						"example": "a_1234567890abcdef"
+					},
+					"invite": {
+						"type": "string",
+						"nullable": true,
+						"description": "Invite code for the guild",
+						"example": "abcdef"
+					},
+					"membercount": {
+						"type": "number",
+						"description": "Total number of members in the guild",
+						"example": 1000
+					}
+				}
+			},
+			"GuildLeaderboardItem": {
+				"type": "object",
+				"description": "Leaderboard entry for a guild member",
+				"properties": {
+					"xp": {
+						"type": "number",
+						"description": "Experience points of the member",
+						"example": 1500
+					},
+					"level": {
+						"type": "number",
+						"description": "Level of the member",
+						"example": 5
+					},
+					"multiplier": {
+						"type": "number",
+						"description": "XP multiplier for the member",
+						"example": 1.5
+					},
+					"user": {
+						"type": "object",
+						"description": "User information",
+						"properties": {
+							"id": {
+								"type": "string",
+								"description": "Discord user ID",
+								"example": "123456789012345678"
+							},
+							"name": {
+								"type": "string",
+								"description": "Username",
+								"example": "exampleuser"
+							},
+							"avatar": {
+								"type": "string",
+								"description": "Avatar hash",
+								"example": "a_1234567890abcdef"
+							}
+						}
+					}
+				}
+			},
+			"AppealQuestion": {
+				"type": "object",
+				"description": "Question used in punishment appeals",
+				"required": ["id", "question", "guildId", "active", "answertype", "required"],
+				"properties": {
+					"id": {
+						"type": "integer",
+						"description": "Question unique identifier",
+						"example": 1
+					},
+					"question": {
+						"type": "string",
+						"description": "Appeal question text",
+						"example": "Why do you think your punishment should be lifted?"
+					},
+					"guildId": {
+						"type": "string",
+						"description": "Discord guild ID",
+						"example": "123456789012345678"
+					},
+					"active": {
+						"type": "boolean",
+						"description": "Whether question is active",
+						"example": true
+					},
+					"answertype": {
+						"type": "string",
+						"description": "Type of answer expected for this question",
+						"enum": [
+							"paragraph",
+							"short",
+							"number",
+							"boolean",
+							"multiple_choice",
+							"single_choice",
+							"text"
+						],
+						"example": "paragraph"
+					},
+					"options": {
+						"type": "array",
+						"description": "Available options for multiple/single choice questions",
+						"items": {
+							"type": "string"
+						}
+					},
+					"required": {
+						"type": "boolean",
+						"example": false
+					}
+				}
+			},
+			"UrlScanQueued": {
+				"type": "object",
+				"description": "Response when URL is queued for scanning",
+				"properties": {
+					"scanId": {
+						"type": "string",
+						"description": "Unique identifier for tracking scan status",
+						"example": "abc123def456"
+					},
+					"idExpires": {
+						"type": "number",
+						"description": "Unix timestamp when scan ID expires",
+						"example": 1677721600000
+					}
+				}
+			},
+			"ActionRow": {
+				"type": "object",
+				"properties": {
+					"type": {
+						"type": "integer",
+						"enum": [1],
+						"description": "Component type - action row"
+					},
+					"components": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/Button"
+						}
+					}
+				}
+			},
+			"Button": {
+				"type": "object",
+				"properties": {
+					"type": {
+						"type": "integer",
+						"enum": [2],
+						"description": "Component type - button"
+					},
+					"style": {
+						"type": "integer",
+						"enum": [5],
+						"description": "Button style - link"
+					},
+					"url": {
+						"type": "string",
+						"format": "uri"
+					},
+					"label": {
+						"type": "string"
+					},
+					"emoji": {
+						"type": "object",
+						"properties": {
+							"name": { "type": "string" },
+							"id": { "type": "string" },
+							"animated": { "type": "boolean" }
+						}
+					}
+				}
+			},
+			"Embed": {
+				"type": "object",
+				"properties": {
+					"description": { "type": "string" },
+					"color": { "type": "integer" },
+					"fields": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"name": { "type": "string" },
+								"value": { "type": "string" }
+							}
+						}
+					}
+				}
+			},
+			"PartialGuild": {
+				"type": "object",
+				"required": ["id", "name"],
+				"properties": {
+					"id": {
+						"type": "string",
+						"description": "Guild ID"
+					},
+					"name": {
+						"type": "string",
+						"description": "Guild name"
+					},
+					"icon": {
+						"type": "string",
+						"nullable": true,
+						"description": "Icon hash"
+					},
+					"banner": {
+						"type": "string",
+						"nullable": true,
+						"description": "Banner hash"
+					}
+				}
+			},
+			"DiscordPartialGuild": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string",
+						"description": "Guild ID"
+					},
+					"name": {
+						"type": "string",
+						"description": "Guild name"
+					},
+					"icon": {
+						"type": "string",
+						"nullable": true,
+						"description": "Icon hash"
+					},
+					"owner": {
+						"type": "boolean",
+						"description": "Whether user is owner"
+					},
+					"permissions": {
+						"type": "string",
+						"description": "User's permissions in guild"
+					},
+					"features": {
+						"type": "array",
+						"items": {
+							"type": "string"
+						},
+						"description": "Guild feature flags"
+					}
+				}
+			},
+			"Error": {
+				"type": "object",
+				"required": ["code", "message"],
+				"properties": {
+					"code": {
+						"type": "string",
+						"description": "Error code identifier",
+						"readOnly": true
+					},
+					"message": {
+						"type": "string",
+						"description": "Human readable error message",
+						"readOnly": true
+					},
+					"status": {
+						"type": "integer",
+						"description": "HTTP status code",
+						"readOnly": true,
+						"minimum": 100,
+						"maximum": 599
+					},
+					"timestamp": {
+						"type": "string",
+						"format": "date-time",
+						"description": "Error timestamp",
+						"readOnly": true
+					}
+				}
+			},
+			"ValidationError": {
+				"allOf": [
+					{
+						"$ref": "#/components/schemas/Error"
+					},
+					{
+						"type": "object",
+						"properties": {
+							"details": {
+								"type": "array",
+								"items": {
+									"type": "object",
+									"required": ["field", "message"],
+									"properties": {
+										"field": {
+											"type": "string",
+											"description": "Field that failed validation",
+											"readOnly": true
+										},
+										"message": {
+											"type": "string", 
+											"description": "Validation error message",
+											"readOnly": true
+										},
+										"value": {
+											"type": "string",
+											"description": "Invalid value received",
+											"readOnly": true
+										}
+									}
+								}
+							}
+						}
+					}
+				]
+			},
+			"PaginationQuery": {
+				"type": "object",
+				"properties": {
+					"skip": {
+						"type": "integer",
+						"minimum": 0,
+						"description": "Number of items to skip"
+					},
+					"take": {
+						"type": "integer",
+						"minimum": 1,
+						"maximum": 100,
+						"default": 50,
+						"description": "Number of items to take"
+					}
+				}
+			},
+			"Timestamps": {
+				"type": "object",
+				"properties": {
+					"createdAt": {
+						"type": "string",
+						"format": "date-time",
+						"description": "Creation timestamp"
+					},
+					"updatedAt": {
+						"type": "string",
+						"format": "date-time",
+						"description": "Last update timestamp"
+					}
+				}
+			}
+		}
+	},
+	"security": [
+		{
+			"BearerAuth": ["user"]
+		}
+	]
+}

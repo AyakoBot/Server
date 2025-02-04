@@ -2,19 +2,10 @@ import { dev } from '$env/static/private';
 import { PUBLIC_CDN, PUBLIC_HOSTNAME } from '$env/static/public';
 import endpoints from '$lib/scripts/util/endpoints';
 import cdn from '$lib/server/cdn';
-import metrics from '$lib/server/metrics';
-import { type Handle, type Reroute } from '@sveltejs/kit';
+import { type Handle } from '@sveltejs/kit';
 import fs from 'fs';
 
 const inDev = dev === 'true';
-
-/** @type {import('@sveltejs/kit').Reroute} */
-export const reroute: Reroute = ({ url }) => {
-	const makeNew = (newUrl: string) => `/${new URL(newUrl).href.split(/\/+/g).slice(2).join('/')}`;
-
-	if (url.pathname.startsWith('/api/')) return makeNew(url.href.replace('/api/', '/'));
-	if (url.hostname === 'wzxy.org') return makeNew(`https://wzxy.org/shorturl/${url.pathname}`);
-};
 
 /** @type {import('@sveltejs/kit').Handle} */
 export const handle: Handle = async ({ event, resolve }) => {
@@ -81,7 +72,10 @@ const finish = (data: Parameters<Handle>[0]) => {
 	});
 };
 
-const doAPIMetrics = (request: Request) => {
+const doAPIMetrics = async (request: Request) => {
+	if (dev === 'true') return;
+	const { default: metrics } = await import('$lib/server/metrics');
+
 	const { pathname } = new URL(request.url);
 	const urlParts = pathname.split(/\//g);
 	const [, apiVersion] = urlParts;
@@ -104,14 +98,20 @@ const doAPIMetrics = (request: Request) => {
 	);
 };
 
-const doCDNMetrics = (request: Request) => {
+const doCDNMetrics = async (request: Request) => {
+	if (dev === 'true') return;
+	const { default: metrics } = await import('$lib/server/metrics');
+
 	const pathArgs = new URL(request.url).pathname.split(/\//g);
 	const folder = pathArgs.splice(0, pathArgs.length - 1).join('/');
 
 	metrics.cdnCall(folder);
 };
 
-const doResponseMetrics = (response: Response, request: Request) => {
+const doResponseMetrics = async (response: Response, request: Request) => {
+	if (dev === 'true') return;
+	const { default: metrics } = await import('$lib/server/metrics');
+
 	const urlParts = new URL(request.url).pathname.split(/\//g);
 
 	const endpoint = endpoints.find(
