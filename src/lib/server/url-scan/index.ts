@@ -8,6 +8,7 @@ import {
 	safeBrowsingToken,
 	spamhausToken,
 	VTToken,
+	yandexSafeBrowsing,
 } from '$env/static/private';
 import getPathFromError from '$lib/scripts/util/getPathFromError.js';
 import API from '$lib/server/api.js';
@@ -99,7 +100,6 @@ export const scanURL = async (url: string) => {
 	reportFishFish(url);
 
 	if (self.has('allowlistedCDN', url)) return done();
-
 	if (!self.has('badLinks', url)) self.append('badLinks', url);
 	if (self.has('allowlisted', url)) self.delete('allowlisted', url);
 
@@ -286,7 +286,7 @@ const getTriggersAV = async (
 	type: TriggerType | null;
 }> => {
 	try {
-		new URL(url);
+		new URL(`https://${url}`);
 	} catch {
 		return { url, triggers: null, type: null };
 	}
@@ -346,7 +346,7 @@ const getTriggersAV = async (
 
 const inYandexSafeBrowsing = async (u: string) => {
 	const res = await fetch(
-		`https://sba.yandex.net/v4/threatMatches:find?key=${inYandexSafeBrowsing ?? ''}`,
+		`https://sba.yandex.net/v4/threatMatches:find?key=${yandexSafeBrowsing ?? ''}`,
 		{
 			method: 'POST',
 			body: JSON.stringify({
