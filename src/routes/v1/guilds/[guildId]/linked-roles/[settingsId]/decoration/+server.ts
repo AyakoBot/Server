@@ -2,7 +2,7 @@ import makeReadableError from '$lib/scripts/util/makeReadableError.js';
 import APIManager from '$lib/server/api.js';
 import DataBase from '$lib/server/database.js';
 import { API, OAuth2Scopes } from '@discordjs/core';
-import { REST } from '@discordjs/rest';
+import { DiscordAPIError, REST } from '@discordjs/rest';
 import type { linkedRolesDeco } from '@prisma/client';
 import { error, json, redirect } from '@sveltejs/kit';
 import { z } from 'zod';
@@ -72,9 +72,14 @@ export const GET: RequestHandler = async (req) => {
 
 	const bot = await botAPI.applications.getCurrent();
 
-	await userAPI.users.updateApplicationRoleConnection(settings.botId, {
-		platform_username: bot.description.slice(0, 100) || undefined,
-	});
+	const res = await userAPI.users
+		.updateApplicationRoleConnection(settings.botId, {
+			platform_username: bot.description.slice(0, 100) || '🔗',
+		})
+		.catch((e: DiscordAPIError) => e);
+
+
+	if ('message' in res) error(500, `Failed to update role connection\n${res.message}`);
 
 	return json({
 		success: true,
