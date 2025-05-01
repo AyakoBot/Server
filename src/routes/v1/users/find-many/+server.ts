@@ -22,7 +22,7 @@ const Body = z.object(
 );
 
 export const PUT: RequestHandler = async (req) => {
-  const validBody = Body.safeParse(await req.request.json());
+	const validBody = Body.safeParse(await req.request.json());
 	if (!validBody.success) {
 		const error = makeReadableError(validBody.error);
 		return new Response(JSON.stringify({ message: error }), { status: 400 });
@@ -30,9 +30,8 @@ export const PUT: RequestHandler = async (req) => {
 
 	const { userIds } = validBody.data;
 
-	const userKeys = await redis
-		.keys(`${env.PUBLIC_ID}:cache:prod:users:*`)
-		.then((keys) => keys.filter((k) => userIds.includes(k.split(':').pop()!)));
+	const keystore = await redis.hgetall('keystore:users');
+	const userKeys = Object.keys(keystore).filter((k) => userIds.includes(k.split(':').pop()!));
 
 	const users = await Promise.all(userKeys.map((k) => redis.get(k))).then((us) =>
 		us.map((u) => (u ? (JSON.parse(u) as RUser) : null)),
