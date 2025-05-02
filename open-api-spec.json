@@ -1726,6 +1726,107 @@
 			}
 		},
 		"/v1/@me/reminders": {
+			"post": {
+				"tags": ["Me"],
+				"summary": "Create a new reminder",
+				"description": "Creates a new reminder for the authenticated user",
+				"operationId": "createReminder",
+				"parameters": [
+					{
+						"in": "header",
+						"name": "Authorization",
+						"description": "Bearer or Bot token",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"required": ["content", "endtime"],
+								"properties": {
+									"content": {
+										"type": "string",
+										"minLength": 1,
+										"maxLength": 2000,
+										"description": "Reminder message content"
+									},
+									"endtime": {
+										"type": "integer",
+										"minimum": 0,
+										"maximum": 9007199254740991,
+										"description": "When the reminder should trigger (Unix timestamp ms)"
+									}
+								}
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Reminder created successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": ["id", "endtime", "userid", "reason", "channelid"],
+									"properties": {
+										"id": {
+											"type": "integer",
+											"description": "Unique reminder ID"
+										},
+										"endtime": {
+											"type": "integer",
+											"description": "When reminder will trigger"
+										},
+										"userid": {
+											"type": "string",
+											"description": "Discord user ID"
+										},
+										"reason": {
+											"type": "string",
+											"description": "Reminder content"
+										},
+										"channelid": {
+											"type": "string",
+											"description": "Discord channel ID or 'Website'"
+										}
+									}
+								}
+							}
+						}
+					},
+					"400": {
+						"$ref": "#/components/responses/ValidationError"
+					},
+					"403": {
+						"$ref": "#/components/responses/Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"message": {
+											"type": "string",
+											"example": "Invalid or no token provided"
+										}
+									}
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"BearerAuth": ["user"]
+					}
+				]
+			},
 			"get": {
 				"tags": ["Me"],
 				"summary": "Get user's reminders",
@@ -1917,185 +2018,6 @@
 				"security": [
 					{
 						"BearerAuth": []
-					}
-				]
-			}
-		},
-		"/v1/reminders": {
-			"post": {
-				"tags": ["Me"],
-				"summary": "Create a new reminder",
-				"description": "Creates a new reminder for the authenticated user",
-				"operationId": "createReminder",
-				"parameters": [
-					{
-						"in": "header",
-						"name": "Authorization",
-						"description": "Bearer or Bot token",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"type": "object",
-								"required": ["content", "endtime"],
-								"properties": {
-									"content": {
-										"type": "string",
-										"minLength": 1,
-										"maxLength": 2000,
-										"description": "Reminder message content"
-									},
-									"endtime": {
-										"type": "integer",
-										"minimum": 0,
-										"maximum": 9007199254740991,
-										"description": "When the reminder should trigger (Unix timestamp ms)"
-									}
-								}
-							}
-						}
-					}
-				},
-				"responses": {
-					"200": {
-						"description": "Reminder created successfully",
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "object",
-									"required": ["id", "endtime", "userid", "reason", "channelid"],
-									"properties": {
-										"id": {
-											"type": "integer",
-											"description": "Unique reminder ID"
-										},
-										"endtime": {
-											"type": "integer",
-											"description": "When reminder will trigger"
-										},
-										"userid": {
-											"type": "string",
-											"description": "Discord user ID"
-										},
-										"reason": {
-											"type": "string",
-											"description": "Reminder content"
-										},
-										"channelid": {
-											"type": "string",
-											"description": "Discord channel ID or 'Website'"
-										}
-									}
-								}
-							}
-						}
-					},
-					"400": {
-						"$ref": "#/components/responses/ValidationError"
-					},
-					"403": {
-						"$ref": "#/components/responses/Forbidden",
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "object",
-									"properties": {
-										"message": {
-											"type": "string",
-											"example": "Invalid or no token provided"
-										}
-									}
-								}
-							}
-						}
-					}
-				},
-				"security": [
-					{
-						"BearerAuth": ["user"]
-					}
-				]
-			},
-			"get": {
-				"tags": ["Me"],
-				"summary": "Get all reminders",
-				"description": "Returns a list of all reminders across users, requires bot authorization",
-				"operationId": "getReminders",
-				"parameters": [
-					{
-						"in": "header",
-						"name": "Authorization",
-						"description": "Bot token only",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"responses": {
-					"200": {
-						"description": "List of all reminders",
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "array",
-									"items": {
-										"type": "object",
-										"required": ["id", "endtime", "userid", "reason", "channelid"],
-										"properties": {
-											"id": {
-												"type": "integer",
-												"description": "Reminder unique ID"
-											},
-											"endtime": {
-												"type": "integer",
-												"description": "When the reminder triggers (Unix timestamp ms)"
-											},
-											"userid": {
-												"type": "string",
-												"description": "Discord user ID"
-											},
-											"reason": {
-												"type": "string",
-												"description": "Reminder content"
-											},
-											"channelid": {
-												"type": "string",
-												"description": "Discord channel ID or 'Website'"
-											}
-										}
-									}
-								}
-							}
-						}
-					},
-					"403": {
-						"$ref": "#/components/responses/Forbidden",
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "object",
-									"properties": {
-										"message": {
-											"type": "string",
-											"example": "Invalid or no token provided"
-										}
-									}
-								}
-							}
-						}
-					}
-				},
-				"security": [
-					{
-						"BotAuth": ["bot"]
 					}
 				]
 			}
@@ -2976,7 +2898,7 @@
 			"PunishmentResponse": {
 				"type": "object",
 				"description": "Details about a moderation punishment",
-					"required": ["id", "type", "reason"],
+				"required": ["id", "type", "reason"],
 				"properties": {
 					"appealed": {
 						"type": "boolean",
@@ -3033,7 +2955,7 @@
 					},
 					"createdAt": {
 						"type": "string",
-						"format": "date-time", 
+						"format": "date-time",
 						"description": "When the punishment was created",
 						"readOnly": true
 					},
@@ -3367,7 +3289,7 @@
 											"readOnly": true
 										},
 										"message": {
-											"type": "string", 
+											"type": "string",
 											"description": "Validation error message",
 											"readOnly": true
 										},

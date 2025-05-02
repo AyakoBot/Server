@@ -3,7 +3,9 @@ import type { RequestHandler } from './$types';
 import { error, json } from '@sveltejs/kit';
 import validateToken from '$lib/scripts/util/validateToken';
 import DataBase from '$lib/server/database';
-import type { reminders } from '@prisma/client';
+import type { Reminder } from '@prisma/client';
+import { Reminder as ReminderClass } from 'src/lib/scripts/util/Reminder';
+import { Decimal } from '@prisma/client/runtime/client';
 
 export const GET: RequestHandler = async (req) => {
 	const token = await validateToken(req);
@@ -14,22 +16,22 @@ export const GET: RequestHandler = async (req) => {
 
 	const { reminderId } = req.params;
 
-	const reminder = await DataBase.reminders.findUnique({
-		where: { uniquetimestamp: reminderId, userid: user.userid },
+	const reminder = await DataBase.reminder.findUnique({
+		where: { startTime: reminderId, userId: user.userid },
 	});
 
 	if (!reminder) return error(404, 'Reminder not found');
 
 	return json({
 		...reminder,
-		id: Number(reminder.uniquetimestamp),
-		endtime: Number(reminder.endtime),
+		id: Number(reminder.startTime),
+		endTime: Number(reminder.endTime),
 	} as GETResponse);
 };
 
-export type GETResponse = Omit<reminders, 'uniquetimestamp' | 'endtime'> & {
+export type GETResponse = Omit<Reminder, 'startTime' | 'endTime'> & {
 	id: number;
-	endtime: number;
+	endTime: number;
 };
 
 export const DELETE: RequestHandler = async (req) => {
@@ -41,7 +43,7 @@ export const DELETE: RequestHandler = async (req) => {
 
 	const { reminderId } = req.params;
 
-	await DataBase.reminders.delete({ where: { uniquetimestamp: reminderId, userid: user.userid } });
+	new ReminderClass({ startTime: new Decimal(reminderId), userId: user.userid }, false).delete();
 
 	return new Response(null, { status: 204 });
 };
