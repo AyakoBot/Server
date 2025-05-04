@@ -1,10 +1,9 @@
 import redis from '$lib/server/redis.js';
-import makeReadableError from 'src/lib/scripts/util/makeReadableError';
-import type { RequestHandler } from './$types';
-import z from 'zod';
-import { env } from '$env/dynamic/public';
 import type { RUser } from '@ayako/bot/src/Typings/Redis';
 import { json } from '@sveltejs/kit';
+import makeReadableError from 'src/lib/scripts/util/makeReadableError';
+import z from 'zod';
+import type { RequestHandler } from './$types';
 
 const Body = z.object(
 	{

@@ -25,12 +25,14 @@ export const GET: RequestHandler = async (req) => {
 	return json({
 		...reminder,
 		id: Number(reminder.startTime),
+  startTime: Number(reminder.startTime),
 		endTime: Number(reminder.endTime),
 	} as GETResponse);
 };
 
 export type GETResponse = Omit<Reminder, 'startTime' | 'endTime'> & {
 	id: number;
+ startTime: number;
 	endTime: number;
 };
 

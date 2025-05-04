@@ -83,10 +83,12 @@ export const POST: RequestHandler = async (req) => {
 		...reminder.toJSON(),
 		id: Number(reminder.toJSON().startTime),
 		endTime: Number(reminder.toJSON().endTime),
+		startTime: Number(reminder.toJSON().startTime),
 	} as POSTResponse);
 };
 
 export type POSTResponse = Omit<Reminder, 'startTime' | 'endTime'> & {
 	id: number;
+	startTime: number;
 	endTime: number;
 };
