@@ -2,7 +2,7 @@ import { dev } from '$env/static/private';
 import { PUBLIC_CDN, PUBLIC_HOSTNAME } from '$env/static/public';
 import endpoints from '$lib/scripts/util/endpoints';
 import cdn from '$lib/server/cdn';
-import { type Handle } from '@sveltejs/kit';
+import { redirect, type Handle } from '@sveltejs/kit';
 import fs from 'fs';
 
 const inDev = dev === 'true';
@@ -26,6 +26,14 @@ export const handle: Handle = async ({ event, resolve }) => {
 				'Permissions-Policy': 'camera=(), microphone=(), document-domain=()',
 			},
 		});
+	}
+
+	if (event.url.pathname.startsWith('/api/')) {
+		event.url = new URL(`https://wzxy.org/${event.url.href.replace('/api/', '/')}`);
+	}
+
+	if (event.url.hostname === 'wzxy.org' && !event.url.pathname.startsWith('/shorturl/')) {
+		throw redirect(307, `https://api.ayakobot.com/shorturl${event.url.pathname}`);
 	}
 
 	const response = await finish({ event, resolve });

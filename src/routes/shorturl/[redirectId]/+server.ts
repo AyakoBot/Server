@@ -5,9 +5,7 @@ import type { RequestHandler } from './$types';
 export const GET: RequestHandler = async (req) => {
 	const { redirectId: id } = req.params;
 
-	console.log(id);
 	const url = await DataBase.shrtUrls.findUnique({ where: { id } });
-	console.log(url);
 
 	if (!url) return text('Not Found', { status: 404 });
 
