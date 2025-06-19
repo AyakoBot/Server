@@ -1,14 +1,12 @@
 import DataBase from '$lib/server/database.js';
+import redis from '$lib/server/redis.js';
 import { error, json } from '@sveltejs/kit';
 import { InteractionType, type APIInteraction } from 'discord-api-types/v10';
+import sleep from 'src/lib/scripts/util/sleep';
 import nacl from 'tweetnacl';
 import type { RequestHandler } from './$types';
-import redis from '$lib/server/redis.js';
-
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export const POST: RequestHandler = async (req) => {
-
 	const signature = req.request.headers.get('X-Signature-Ed25519');
 	if (!signature) return error(401, 'Unauthorized');
 
