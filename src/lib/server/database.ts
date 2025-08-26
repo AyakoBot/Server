@@ -1,20 +1,23 @@
 import { DATABASE_URL } from '$env/static/private';
 import { Prisma, PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient({ datasources: { db: { url: DATABASE_URL } } });
-
-prisma.$use(async (params, next) => {
-	try {
-		const result = await next(params);
-		return result;
-	} catch (error) {
-		if (error instanceof Prisma.PrismaClientKnownRequestError) return null;
-		throw error;
-	}
+const client = new PrismaClient({
+	datasources: { db: { url: DATABASE_URL } },
+}).$extends({
+	query: {
+		$allOperations: async ({ args, query }) => {
+			try {
+				return await query(args);
+			} catch (error) {
+				if (error instanceof Prisma.PrismaClientKnownRequestError) return null;
+				throw error;
+			}
+		},
+	},
 });
 
-export default prisma;
+export default client;
 
 process.on('SIGINT', async () => {
-	return prisma.$disconnect();
+	return client.$disconnect();
 });

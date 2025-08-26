@@ -16,11 +16,12 @@ export const GET: RequestHandler = async (req) => {
 	if (user instanceof Response) return user;
 
 	const reminders = await DataBase.reminder.findMany({ where: { userId: user.userid } });
+	if (!reminders) return json([] as GETResponse);
 
 	return json(
 		reminders.map((r) => ({
 			...r,
-			id: Number(r.startTime),
+			id: Number(r.uniquetimestamp),
 			endTime: Number(r.endTime),
 		})) as GETResponse,
 	);
@@ -76,14 +77,14 @@ export const POST: RequestHandler = async (req) => {
 		endTime: new Decimal(body.data.endTime),
 		reason: body.data.reason,
 		userId: user.userid,
-		startTime: new Decimal(body.data.startTime || Date.now()),
+		uniquetimestamp: new Decimal(body.data.startTime || Date.now()),
 	});
 
 	return json({
 		...reminder.toJSON(),
-		id: Number(reminder.toJSON().startTime),
+		id: Number(reminder.toJSON().uniquetimestamp),
 		endTime: Number(reminder.toJSON().endTime),
-		startTime: Number(reminder.toJSON().startTime),
+		startTime: Number(reminder.toJSON().uniquetimestamp),
 	} as POSTResponse);
 };
 
