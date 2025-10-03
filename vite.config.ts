@@ -22,16 +22,23 @@ export default defineConfig({
 			},
 		},
 		// Skip automatic dependency optimization for problematic packages
-		exclude: ['@discordjs/rest', 'cookie'],
+		exclude: ['@discordjs/rest', 'cookie', 'discord-api-types'],
 	},
 	build: {
 		// Improve compatibility with CJS/ESM mixed modules
 		commonjsOptions: {
 			transformMixedEsModules: true,
+			ignoreDynamicRequires: true,
+		},
+		rollupOptions: {
+			external: ['zlib-sync'],
 		},
 	},
 	ssr: {
 		// Force bundling of these packages to avoid ESM/CJS issues
-		noExternal: ['@discordjs/rest', 'cookie', 'discord-api-types'],
+		noExternal: ['@discordjs/rest', 'cookie'],
+	},
+	define: {
+		global: 'globalThis',
 	},
 });

@@ -1,10 +1,10 @@
-import validateToken from '$lib/scripts/util/validateToken.js';
-import type { RequestHandler } from './$types';
 import getUser, { AuthTypes } from '$lib/scripts/util/getUser';
+import validateToken from '$lib/scripts/util/validateToken.js';
 import API from '$lib/server/api';
 import DataBase from '$lib/server/database';
 import { error, json } from '@sveltejs/kit';
 import { OAuth2Scopes, type RESTAPIPartialCurrentUserGuild } from 'discord-api-types/v10';
+import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async (req) => {
 	const token = await validateToken(req);

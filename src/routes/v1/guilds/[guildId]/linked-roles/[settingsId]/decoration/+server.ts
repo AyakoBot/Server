@@ -7,7 +7,7 @@ import type { linkedRolesDeco } from '@prisma/client';
 import { error, json, redirect } from '@sveltejs/kit';
 import { z } from 'zod';
 import type { RequestHandler } from './$types';
-import { nirn } from '$env/static/private';
+import { proxy } from '$env/static/private';
 
 export const GET: RequestHandler = async (req) => {
 	const code = req.url.searchParams.get('code');
@@ -31,7 +31,7 @@ export const GET: RequestHandler = async (req) => {
 	if (!settings.botId) return error(424, 'Bot ID missing in Settings');
 	if (!settings.botSecret) return error(424, 'Bot Secret missing in Settings');
 	if (!settings.botToken) return error(424, 'Bot Token missing in Settings');
-	if (!code)
+	if (!code) {
 		throw redirect(
 			302,
 			APIManager.getAPI().oauth2.generateAuthorizationURL({
@@ -42,25 +42,33 @@ export const GET: RequestHandler = async (req) => {
 				prompt: 'none',
 			}),
 		);
+	}
 
-	const rest = new REST({ api: `http://${nirn}:8080/api`, authPrefix: 'Bot' });
+	const rest = new REST({ api: `http://${proxy}:8080/api`, authPrefix: 'Bot' });
 	const botAPI = new API(rest.setToken(settings.botToken));
-	const tokens = await botAPI.oauth2.tokenExchange({
-		client_id: settings.botId,
-		client_secret: settings.botSecret!,
-		grant_type: 'authorization_code',
-		code,
-		redirect_uri: getRedirectURI(settings),
-	});
+	const tokens = await botAPI.oauth2
+		.tokenExchange({
+			client_id: settings.botId,
+			client_secret: settings.botSecret!,
+			grant_type: 'authorization_code',
+			code,
+			redirect_uri: getRedirectURI(settings),
+		})
+		.catch((e) => e);
+
+	if ('message' in tokens) return error(401, tokens.message);
 
 	const userAPI = APIManager.makeAPI(tokens.access_token);
 	const identity = await userAPI.oauth2.getCurrentAuthorizationInformation();
 	if (!identity.user) return error(401, 'User not found. Scope "identify" missing');
-	if (!identity.scopes.includes(OAuth2Scopes.Identify))
+	if (!identity.scopes.includes(OAuth2Scopes.Identify)) {
 		return error(401, 'Scope "identify" missing');
+	}
+
 	if (!identity.scopes.includes(OAuth2Scopes.RoleConnectionsWrite)) {
 		return error(401, 'Scope "role_connections.write" missing');
 	}
+
 	if (
 		!settings.allowedUsers.includes(identity.user.id) &&
 		!(await allowedByRoles(botAPI, identity.user.id, settings))

@@ -5,6 +5,7 @@ import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async (req) => {
 	const auth = req.request.headers.get('authorization');
+ console.log('hi', auth);
 	if (!auth) return error(401);
 	if (auth.replace('Bearer ', '') !== METRICS_TOKEN) return error(403);
 

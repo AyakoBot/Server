@@ -1,4 +1,4 @@
-import { BOT_TOKEN, nirn } from '$env/static/private';
+import { BOT_TOKEN, proxy } from '$env/static/private';
 import { API } from '@discordjs/core';
 import { REST } from '@discordjs/rest';
 
@@ -9,7 +9,7 @@ const self = {
 		if (api) return api;
 
 		api = new API(
-			new REST({ authPrefix: 'Bot', api: `https://${nirn}/api` }).setToken(BOT_TOKEN),
+			new REST({ authPrefix: 'Bot', api: `http://${proxy}:8080/api` }).setToken(BOT_TOKEN),
 		);
 		return api;
 	},
@@ -19,7 +19,7 @@ const self = {
 		if (existing) return existing;
 
 		const api = new API(
-			new REST({ authPrefix: 'Bearer', api: `https://${nirn}/api` }).setToken(token),
+			new REST({ authPrefix: 'Bearer', api: `http://${proxy}:8080/api` }).setToken(token),
 		);
 
 		self.userAPIs.set(token, api);

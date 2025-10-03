@@ -1,8 +1,10 @@
 import makeReadableError from '$lib/scripts/util/makeReadableError';
 import DataBase from '$lib/server/database.js';
+import { xpToLevel } from '@ayako/bot/src/Events/BotEvents/messageEvents/messageCreate/levelling.js';
 import { error, json } from '@sveltejs/kit';
 import { z } from 'zod';
 import type { RequestHandler } from './$types';
+import { FormulaType } from '@prisma/client';
 
 export const GET: RequestHandler = async (req) => {
 	const guildId = z
@@ -40,6 +42,8 @@ export const GET: RequestHandler = async (req) => {
 		skip: skip.data,
 	});
 
+	const settings = await DataBase.leveling.findUnique({ where: { guildid: guildId.data } });
+
 	const userIds = [...new Set(levels.map((l) => l.userid))];
 	const users = await DataBase.users.findMany({ where: { userid: { in: userIds } } });
 
@@ -49,7 +53,10 @@ export const GET: RequestHandler = async (req) => {
 
 			return {
 				xp: Number(l.xp),
-				level: Number(l.level),
+				level: xpToLevel[settings?.formulaType || FormulaType.polynomial](
+					Number(l.xp),
+					settings ? Number(settings.curveModifier) : 100,
+				),
 				multiplier: Number(l.multiplier),
 				user: {
 					id: l.userid,

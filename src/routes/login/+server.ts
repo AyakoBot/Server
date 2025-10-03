@@ -1,7 +1,6 @@
-import { BOT_SECRET } from '$env/static/private';
+import { BOT_SECRET, BOT_TOKEN } from '$env/static/private';
 import { PUBLIC_HOSTNAME, PUBLIC_ID } from '$env/static/public';
 import getAvatarURL from '$lib/scripts/util/getAvatarURL';
-import API from '$lib/server/api.js';
 import DataBase from '$lib/server/database.js';
 import { error, json } from '@sveltejs/kit';
 import {
@@ -10,6 +9,9 @@ import {
 	type RESTPostOAuth2AccessTokenResult,
 } from 'discord-api-types/v10';
 import type { RequestHandler } from './$types';
+import { REST } from '@discordjs/rest';
+import { API } from '@discordjs/core';
+import APIManager from '$lib/server/api.js';
 
 export const GET: RequestHandler = async (req) => {
 	const bearer = req.request.headers.get('Authorization')?.replace('Bearer ', '');
@@ -23,7 +25,10 @@ export const GET: RequestHandler = async (req) => {
 
 	const redirectUri = req.url.searchParams.get('redirect_uri');
 
-	const token = await API.getAPI().oauth2.tokenExchange({
+	const tokenExchangeRest = new REST({ authPrefix: 'Bot' });
+	const tokenExchangeAPI = new API(tokenExchangeRest.setToken(BOT_TOKEN));
+
+	const token = await tokenExchangeAPI.oauth2.tokenExchange({
 		client_id: settings ? (settings.appid ?? PUBLIC_ID) : PUBLIC_ID,
 		client_secret: settings ? (settings.secret ?? BOT_SECRET) : BOT_SECRET,
 		grant_type: 'authorization_code',
@@ -34,12 +39,12 @@ export const GET: RequestHandler = async (req) => {
 	if (!token) return error(401, 'Invalid code');
 	if (!token.scope.includes(OAuth2Scopes.Identify)) return error(401, 'Invalid scope');
 
-	const user = await API.makeAPI(token.access_token).users.getCurrent();
+	const user = await APIManager.makeAPI(token.access_token).users.getCurrent();
 	upsertUser(user, token, settings?.appid ?? PUBLIC_ID);
 	if (!user) return error(401, 'Invalid token');
 
 	if (token.scope.includes(OAuth2Scopes.GuildsJoin)) {
-		API.getAPI()
+		APIManager.getAPI()
 			.guilds.addMember('298954459172700181', user.id, { access_token: token.access_token })
 			.catch(() => null);
 	}
