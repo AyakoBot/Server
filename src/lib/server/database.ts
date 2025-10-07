@@ -19,5 +19,6 @@ const client = new PrismaClient({
 export default client;
 
 process.on('SIGINT', async () => {
-	return client.$disconnect();
+	await client.$disconnect();
+	process.exit();
 });
