@@ -18,6 +18,7 @@ interface Command {
 	description: string;
 	explainDescription: string | undefined;
 	fields: {
+		id: string;
 		type: EditorTypes;
 		name: string;
 		description: string;
@@ -50,7 +51,10 @@ const getCommandFromSubCommand = (
 				([key]) => key.toLowerCase() === command.name.toLowerCase(),
 			)?.[1] as Record<string, EditorTypes>) || {},
 		)
-			.map(([fieldName, fieldType]) => getField(fieldName, fieldType, command.name))
+			.map(([fieldName, fieldType]) => ({
+				...getField(fieldName, fieldType, command.name),
+				id: fieldName,
+			}))
 			.filter((f): f is Command['fields'][number] => !!f),
 	};
 };
