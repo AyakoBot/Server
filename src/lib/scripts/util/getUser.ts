@@ -26,7 +26,6 @@ export default async (
 				});
 
 			if (res) return res;
-			break;
 		}
 		case acceptedAuthTypes.includes(AuthTypes.Bot): {
 			const res = await DataBase.users
@@ -42,7 +41,6 @@ export default async (
 				});
 
 			if (res) return res;
-			break;
 		}
 		default:
 			break;
