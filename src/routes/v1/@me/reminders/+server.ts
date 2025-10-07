@@ -21,7 +21,7 @@ export const GET: RequestHandler = async (req) => {
 	return json(
 		reminders.map((r) => ({
 			...r,
-			id: Number(r.uniquetimestamp),
+			id: Number(r.startTime),
 			endTime: Number(r.endTime),
 		})) as GETResponse,
 	);
@@ -40,16 +40,12 @@ const POSTBody = z.object({
 	endTime: z
 		.number({ message: 'endTime is not a number' })
 		.int({ message: 'endTime is not an int' })
-		.min(Date.now(), { message: 'endTime cannot be in the past' })
-		.finite({ message: 'endTime is not finite' })
-		.safe({ message: `endTime is gt ${Number.MAX_SAFE_INTEGER}` }),
+		.min(Date.now(), { message: 'endTime cannot be in the past' }),
 	startTime: z
 		.number({ message: 'startTime is not a number' })
 		.int({ message: 'startTime is not an int' })
 		.max(Date.now(), { message: 'startTime cannot be in the future' })
 		.min(Date.now() - 10000, { message: 'startTime cannot be this far in the past' })
-		.finite({ message: 'startTime is not finite' })
-		.safe({ message: `startTime is gt ${Number.MAX_SAFE_INTEGER}` })
 		.optional(),
 });
 
@@ -77,14 +73,14 @@ export const POST: RequestHandler = async (req) => {
 		endTime: new Decimal(body.data.endTime),
 		reason: body.data.reason,
 		userId: user.userid,
-		uniquetimestamp: new Decimal(body.data.startTime || Date.now()),
+		startTime: new Decimal(body.data.startTime || Date.now()),
 	});
 
 	return json({
 		...reminder.toJSON(),
-		id: Number(reminder.toJSON().uniquetimestamp),
+		id: Number(reminder.toJSON().startTime),
 		endTime: Number(reminder.toJSON().endTime),
-		startTime: Number(reminder.toJSON().uniquetimestamp),
+		startTime: Number(reminder.toJSON().startTime),
 	} as POSTResponse);
 };
 
