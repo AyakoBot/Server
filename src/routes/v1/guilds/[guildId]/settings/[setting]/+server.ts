@@ -66,7 +66,7 @@ export const GET: RequestHandler = async (req) => {
 		);
 	if (!settings) return error(404, 'Settings not found');
 
-	return json(settings.map((s) => (s)) as GETResponse<SettingNames>);
+	return json(settings.map((s) => s) as GETResponse<SettingNames>);
 };
 
 export type GETResponse<T extends SettingNames> = (Omit<CRUDResult<T>, 'uniquetimestamp'> & {
