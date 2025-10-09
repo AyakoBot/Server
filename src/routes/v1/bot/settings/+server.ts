@@ -36,6 +36,8 @@ const getCommandFromSubCommand = (
 
 	if (!lan) return undefined;
 
+	const fieldLookupKey = category && category !== 'Basic' ? category : command.name;
+
 	return {
 		name: lan?.name,
 		id: command.name as keyof EditorTypes,
@@ -48,11 +50,11 @@ const getCommandFromSubCommand = (
 		description: command.description,
 		fields: Object.entries(
 			(Object.entries(settingsEditorTypes).find(
-				([key]) => key.toLowerCase() === command.name.toLowerCase(),
+				([key]) => key.toLowerCase() === fieldLookupKey.toLowerCase(),
 			)?.[1] as Record<string, EditorTypes>) || {},
 		)
 			.map(([fieldName, fieldType]) => ({
-				...getField(fieldName, fieldType, command.name),
+				...getField(fieldName, fieldType, fieldLookupKey),
 				id: fieldName,
 			}))
 			.filter((f): f is Command['fields'][number] => !!f),
