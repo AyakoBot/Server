@@ -5,7 +5,6 @@ import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async (req) => {
 	const auth = req.request.headers.get('authorization');
- console.log('hi', auth);
 	if (!auth) return error(401);
 	if (auth.replace('Bearer ', '') !== METRICS_TOKEN) return error(403);
 
@@ -15,7 +14,7 @@ export const GET: RequestHandler = async (req) => {
 };
 
 const getAll = async () => {
-	const keys = ['metrics:Ayako - Manager', 'metrics:api'];
+	const keys = ['metrics:Ayako - Manager', 'metrics:api']; // , 'metrics:cluster', 'metrics:bot'
 	const res = await Promise.all(keys.map((k) => Redis.get(k)));
 
 	const finished: { [key: string]: string } = {};
