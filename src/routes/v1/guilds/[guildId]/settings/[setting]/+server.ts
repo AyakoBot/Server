@@ -1,19 +1,16 @@
+import getUser, { AuthTypes } from '$lib/scripts/util/getUser';
 import validateToken from '$lib/scripts/util/validateToken';
 import DataBase from '$lib/server/database.js';
-import { type appealquestions } from '@prisma/client';
-import { error, json } from '@sveltejs/kit';
-import type { RequestHandler } from './$types';
-import getUser, { AuthTypes } from '$lib/scripts/util/getUser';
-import EditorTypes, {
-	zodValidators as ZodValidators,
-} from '@ayako/bot/src/BaseClient/Other/constants/settingsEditorTypes';
+import EditorTypes from '@ayako/bot/src/BaseClient/Other/constants/settingsEditorTypes';
 import {
-	SettingsName2TableName,
-	type CRUDResult,
-	type SettingNames,
+ SettingsName2TableName,
+ type CRUDResult,
+ type SettingNames,
 } from '@ayako/bot/src/Typings/Settings';
-import z from 'zod';
+import { error, json } from '@sveltejs/kit';
 import prismaToPrimitive from 'src/lib/scripts/util/prismaToPrimitive';
+import z from 'zod';
+import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async (req) => {
 	const token = await validateToken(req);
