@@ -36,7 +36,8 @@ const getCommandFromSubCommand = (
 
 	if (!lan) return undefined;
 
-	const fieldLookupKey = category && category !== 'Basic' ? category : command.name;
+	const fieldLookupKey =
+		category === 'basic' ? command.name : command.name === 'basic' ? category : command.name;
 
 	return {
 		name: lan?.name,
@@ -96,7 +97,7 @@ const getField = (fieldName: string, fieldType: EditorTypes, commandName: string
 		case fieldName === 'xpmultiplier':
 			return lang.multiplier;
 		case !field:
-			console.log(fieldName, fieldType, commandName);
+		// console.log(fieldName, fieldType, commandName);
 		default:
 			return {
 				type: fieldType,
@@ -116,7 +117,7 @@ export const GET: RequestHandler = (req) => {
 		.toJSON()
 		.options?.map((subCommandGroupOrSubCommand) => {
 			if (subCommandGroupOrSubCommand.type === ApplicationCommandOptionType.Subcommand) {
-				return getCommandFromSubCommand(subCommandGroupOrSubCommand, 'Basic');
+				return getCommandFromSubCommand(subCommandGroupOrSubCommand, 'basic');
 			}
 
 			if (subCommandGroupOrSubCommand.type === ApplicationCommandOptionType.SubcommandGroup) {

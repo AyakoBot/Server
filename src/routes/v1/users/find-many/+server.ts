@@ -1,7 +1,7 @@
 import redis from '$lib/server/redis.js';
 import type { RUser } from '@ayako/bot/src/Typings/Redis';
 import { json } from '@sveltejs/kit';
-import makeReadableError from 'src/lib/scripts/util/makeReadableError';
+import makeReadableError from '$lib/scripts/util/makeReadableError';
 import z from 'zod';
 import type { RequestHandler } from './$types';
 

@@ -1,7 +1,7 @@
 import DataBase from '$lib/server/database';
 import { error, json } from '@sveltejs/kit';
-import getUser, { AuthTypes } from 'src/lib/scripts/util/getUser';
-import validateToken from 'src/lib/scripts/util/validateToken';
+import getUser, { AuthTypes } from '$lib/scripts/util/getUser';
+import validateToken from '$lib/scripts/util/validateToken';
 import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async (req) => {

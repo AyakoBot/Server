@@ -2,7 +2,7 @@ import DataBase from '$lib/server/database.js';
 import redis from '$lib/server/redis.js';
 import { error, json } from '@sveltejs/kit';
 import { InteractionType, type APIInteraction } from 'discord-api-types/v10';
-import sleep from 'src/lib/scripts/util/sleep';
+import sleep from '$lib/scripts/util/sleep';
 import nacl from 'tweetnacl';
 import type { RequestHandler } from './$types';
 

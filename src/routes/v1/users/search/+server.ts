@@ -2,10 +2,10 @@ import { PUBLIC_ID } from '$env/static/public';
 import redis from '$lib/server/redis';
 import type { RUser } from '@ayako/bot/src/Typings/Redis.js';
 import { json } from '@sveltejs/kit';
-import makeReadableError from 'src/lib/scripts/util/makeReadableError';
+import makeReadableError from '$lib/scripts/util/makeReadableError';
 import { z } from 'zod';
 import type { RequestHandler } from './$types';
-import getChunks from 'src/lib/scripts/util/getChunks';
+import getChunks from '$lib/scripts/util/getChunks';
 
 const queryRegex =
 	/^(?!.*[@#:```])(?!.*\b(?:everyone|here|system message|discord)\b)(?!.*discord)[^\s]{2,32}$/;

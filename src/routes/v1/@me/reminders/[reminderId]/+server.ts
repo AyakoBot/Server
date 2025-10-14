@@ -4,7 +4,7 @@ import { error, json } from '@sveltejs/kit';
 import validateToken from '$lib/scripts/util/validateToken';
 import DataBase from '$lib/server/database';
 import type { Reminder } from '@prisma/client';
-import { Reminder as ReminderClass } from 'src/lib/scripts/util/Reminder';
+import { Reminder as ReminderClass } from '$lib/scripts/util/Reminder';
 import { Decimal } from '@prisma/client/runtime/client';
 
 export const GET: RequestHandler = async (req) => {
