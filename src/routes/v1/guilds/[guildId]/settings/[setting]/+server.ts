@@ -1,4 +1,6 @@
+import checkPermissions from '$lib/scripts/util/checkPermissions';
 import getUser, { AuthTypes } from '$lib/scripts/util/getUser';
+import prismaToPrimitive from '$lib/scripts/util/prismaToPrimitive';
 import validateToken from '$lib/scripts/util/validateToken';
 import DataBase from '$lib/server/database.js';
 import EditorTypes from '@ayako/bot/src/BaseClient/Other/constants/settingsEditorTypes';
@@ -8,9 +10,11 @@ import {
  type SettingNames,
 } from '@ayako/bot/src/Typings/Settings';
 import { error, json } from '@sveltejs/kit';
-import prismaToPrimitive from 'src/lib/scripts/util/prismaToPrimitive';
 import z from 'zod';
 import type { RequestHandler } from './$types';
+
+const cleanKeys = ['token', 'secret', 'actualprize', 'botToken', 'botSecret', 'apiToken'] as const;
+const deleteKeys = ['uniquetimestamp', 'accesstoken', 'refreshtoken', 'expires', 'scopes'] as const;
 
 export const GET: RequestHandler = async (req) => {
 	const token = await validateToken(req);
@@ -25,6 +29,9 @@ export const GET: RequestHandler = async (req) => {
 		.safeParse(req.params.guildId);
 
 	if (!guildId.success) return error(400, 'Invalid guild ID');
+
+	const hasPermissions = await checkPermissions(guildId.data, ['ManageGuild'], user.userid);
+	if (!hasPermissions) return error(403, 'Missing Permissions');
 
 	const setting = z
 		.enum([...Object.keys(SettingsName2TableName), 'appeal-questions'])
@@ -56,8 +63,16 @@ export const GET: RequestHandler = async (req) => {
 				const data = prismaToPrimitive(q) as unknown as GETResponse<SettingNames>[number];
 				if ('uniquetimestamp' in q) data.id = Number(q.uniquetimestamp);
 
-				delete (data as GETResponse<SettingNames>[number] & { uniquetimestamp?: unknown })
-					.uniquetimestamp;
+				cleanKeys.forEach((key) => {
+					if (!(key in data && typeof (data as any)[key] === 'string')) return;
+					(data as any)[key] = (data as any)[key].replace(/[^.]/g, '*');
+				});
+
+				deleteKeys.forEach((key) => {
+					if (!(key in data)) return;
+					delete (data as any)[key];
+				});
+
 				return data;
 			}),
 		);
