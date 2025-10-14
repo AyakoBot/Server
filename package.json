@@ -15,45 +15,45 @@
 	},
 	"dependencies": {
 		"@ayako/bot": "link:../Bot",
-		"@discordjs/core": "^2.2.2",
+		"@discordjs/core": "^2.3.0",
 		"@discordjs/rest": "^2.6.0",
 		"@octokit/rest": "^22.0.0",
-		"@prisma/client": "^6.16.3",
+		"@prisma/client": "^6.17.1",
 		"@sveltejs/adapter-node": "^5.3.3",
-		"discord-api-types": "0.38.26",
+		"discord-api-types": "0.38.30",
 		"dotenv": "^17.2.3",
 		"glob": "^11.0.3",
-		"ioredis": "^5.8.0",
+		"ioredis": "^5.8.1",
 		"mime": "^4.1.0",
 		"node-schedule": "^2.1.1",
 		"prom-client": "^15.1.3",
 		"svelte-fa": "^4.0.4",
 		"tweetnacl": "^1.0.3",
-		"zod": "^4.1.11"
+		"zod": "^4.1.12"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "^6.1.1",
-		"@sveltejs/kit": "^2.43.8",
+		"@sveltejs/kit": "^2.46.5",
 		"@sveltejs/vite-plugin-svelte": "^6.2.1",
 		"@types/eslint": "^9.6.1",
-		"@types/node": "^24.6.2",
+		"@types/node": "^24.7.2",
 		"@types/node-schedule": "^2.1.8",
-		"@typescript-eslint/eslint-plugin": "^8.45.0",
-		"@typescript-eslint/parser": "^8.45.0",
+		"@typescript-eslint/eslint-plugin": "^8.46.1",
+		"@typescript-eslint/parser": "^8.46.1",
 		"eslint": "^9.37.0",
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-svelte": "^3.12.4",
 		"prettier": "^3.6.2",
 		"prettier-plugin-svelte": "^3.4.0",
-		"prisma": "^6.16.3",
-		"svelte": "5.39.8",
+		"prisma": "^6.17.1",
+		"svelte": "5.39.12",
 		"typescript": "^5.9.3",
 		"vite": "^7.1.9"
 	},
-	"packageManager": "pnpm@10.18.0",
+	"packageManager": "pnpm@10.18.2",
 	"engines": {
 		"node": "^24.2.0",
-		"pnpm": "^10.17.1"
+		"pnpm": "^10.18.2"
 	},
 	"prisma": {
 		"schema": "../../prisma/schema.prisma"
