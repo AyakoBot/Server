@@ -42,15 +42,17 @@ export const GET: RequestHandler = async (req) => {
 
 		if (entries.length === 0) break;
 
-		const userKeys: string[] = [];
+		const keystoreKeys: string[] = [];
 		for (let i = 0; i < entries.length; i += 2) {
-			userKeys.push(entries[i]);
+			keystoreKeys.push(entries[i]);
 		}
 
-		if (userKeys.length === 0) continue;
+		if (keystoreKeys.length === 0) continue;
+
+		const userIds = keystoreKeys.map((k) => k.split(':').slice(2).join(':'));
 
 		const pipeline = redis.pipeline();
-		userKeys.forEach((key) => pipeline.get(key));
+		userIds.forEach((userId) => pipeline.get(`cache:users:${userId}:current`));
 		const results = await pipeline.exec();
 
 		if (!results) continue;
