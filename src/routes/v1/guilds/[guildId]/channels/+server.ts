@@ -22,7 +22,7 @@ export const GET: RequestHandler = async (req) => {
 	const types = z
 		.string()
 		.optional()
-		.transform((str) => str?.split('+'))
+		.transform((str) => str?.split(','))
 		.pipe(z.array(z.enum(Object.values(ChannelType).map((v) => String(v)))).optional())
 		.safeParse(typesRaw.length ? typesRaw : undefined);
 
@@ -53,9 +53,9 @@ export const GET: RequestHandler = async (req) => {
 	);
 
 	return json(
-		channels.filter(
-			(c) => channelPermissions.find((cp) => cp.id === c.id)?.perms || false,
-		) as GETResponse,
+		channels
+			.filter((c) => (types.data ? types.data.includes(String(c.type)) : true))
+			.filter((c) => channelPermissions.find((cp) => cp.id === c.id)?.perms || false) as GETResponse,
 	);
 };
 
