@@ -5,7 +5,6 @@ import { json } from '@sveltejs/kit';
 import makeReadableError from '$lib/scripts/util/makeReadableError';
 import { z } from 'zod';
 import type { RequestHandler } from './$types';
-import getChunks from '$lib/scripts/util/getChunks';
 
 const queryRegex =
 	/^(?!.*[@#:```])(?!.*\b(?:everyone|here|system message|discord)\b)(?!.*discord)[^\s]{2,32}$/;
@@ -31,23 +30,55 @@ export const GET: RequestHandler = async (req) => {
 	}
 
 	const searchQuery = validQuery.data as string;
-	const keystore = getChunks(Object.keys(await redis.hgetall('keystore:users')), 100);
+	const searchLower = searchQuery.toLowerCase();
+	const maxResults = validMax.data || 25;
 	const matchedUsers: RUser[] = [];
 
-	for (const keystoreChunk of keystore) {
-		const pipeline = redis.pipeline();
-		keystoreChunk.map((k) => pipeline.get(k));
-		const users = await pipeline.exec().then((r) => r?.map((u) => JSON.parse(String(u[1])) as RUser));
+	let cursor = '0';
 
-		const user = users?.filter(
-			(u) => !!u && (u.username.includes(searchQuery) || u.global_name?.includes(searchQuery)),
-		);
+	do {
+		const result = await redis.hscan('keystore:users', cursor, 'COUNT', 100);
+		cursor = result[0];
+		const entries = result[1];
 
-		if (user) {
-			matchedUsers.push(...user);
-			if (matchedUsers.length >= (validMax.data || 25)) break;
+		if (entries.length === 0) break;
+
+		const userKeys: string[] = [];
+		for (let i = 1; i < entries.length; i += 2) {
+			userKeys.push(entries[i]);
 		}
-	}
+
+		if (userKeys.length === 0) continue;
+
+		const pipeline = redis.pipeline();
+		userKeys.forEach((key) => pipeline.get(key));
+		const results = await pipeline.exec();
+
+		if (!results) continue;
+
+		for (const [err, data] of results) {
+			if (err || !data) continue;
+
+			try {
+				const user = JSON.parse(String(data)) as RUser;
+
+				if (
+					user &&
+					(user.username?.toLowerCase().includes(searchLower) ||
+						user.global_name?.toLowerCase().includes(searchLower) ||
+						user.id?.includes(searchQuery))
+				) {
+					matchedUsers.push(user);
+
+					if (matchedUsers.length >= maxResults) {
+						return json(matchedUsers as GETResponse);
+					}
+				}
+			} catch {
+				continue;
+			}
+		}
+	} while (cursor !== '0');
 
 	if (!matchedUsers.length) {
 		return new Response(JSON.stringify({ message: 'User not found' }), { status: 404 });
