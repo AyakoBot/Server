@@ -43,7 +43,7 @@ export const GET: RequestHandler = async (req) => {
 		if (entries.length === 0) break;
 
 		const userKeys: string[] = [];
-		for (let i = 1; i < entries.length; i += 2) {
+		for (let i = 0; i < entries.length; i += 2) {
 			userKeys.push(entries[i]);
 		}
 
@@ -55,11 +55,11 @@ export const GET: RequestHandler = async (req) => {
 
 		if (!results) continue;
 
-		for (const [err, data] of results) {
-			if (err || !data) continue;
+		for (const result of results) {
+			if (!result || result[0] || !result[1]) continue;
 
 			try {
-				const user = JSON.parse(String(data)) as RUser;
+				const user = JSON.parse(String(result[1])) as RUser;
 
 				if (
 					user &&
