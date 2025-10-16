@@ -1,8 +1,7 @@
-import { PUBLIC_ID } from '$env/static/public';
+import makeReadableError from '$lib/scripts/util/makeReadableError';
 import redis from '$lib/server/redis';
 import type { RUser } from '@ayako/bot/src/Typings/Redis.js';
 import { json } from '@sveltejs/kit';
-import makeReadableError from '$lib/scripts/util/makeReadableError';
 import { z } from 'zod';
 import type { RequestHandler } from './$types';
 
