@@ -13,7 +13,13 @@ export const GET: RequestHandler = async (req) => {
 		.regex(/\d{17,19}/gm, { message: 'Guild ID is not a snowflake' })
 		.safeParse(req.params.guildId);
 
+	const memberId = z
+		.string()
+		.regex(/^(\d{17,19}|@me)$/gm, { message: 'Member ID must be a snowflake or "@me"' })
+		.safeParse(req.params.memberId);
+
 	if (!guildId.success) return error(400, 'Invalid guild ID');
+	if (!memberId.success) return error(400, 'Invalid member ID');
 
 	const token = await validateToken(req);
 	if (!token) return error(403, 'Invalid or no token provided');
@@ -27,7 +33,10 @@ export const GET: RequestHandler = async (req) => {
 	});
 	if (!guild) return error(404, 'Guild not found');
 
-	const member = await cache.members.get(guild.guildid, user.userid);
+	const member = await cache.members.get(
+		guild.guildid,
+		memberId.data === '@me' ? user.userid : memberId.data,
+	);
 	if (!member) return error(403, 'You are not in this guild');
 
 	return json(member);
