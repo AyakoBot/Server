@@ -81,7 +81,14 @@ const getField = (fieldName: string, fieldType: EditorTypes, commandName: string
 				([key]) => key.toLowerCase() === fieldName.toLowerCase(),
 			)?.[1];
 
-			return { name: blwlField, desc: '-' };
+			return {
+				type: fieldType,
+				name: blwlField,
+				description:
+					lang.slashCommands.settings.BLWLDescs[
+						fieldName as keyof typeof lang.slashCommands.settings.BLWLDescs
+					],
+			};
 		}
 		case fieldName === 'action':
 			return lang.punishmentAction;
