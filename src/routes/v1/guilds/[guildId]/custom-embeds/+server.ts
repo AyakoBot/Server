@@ -36,6 +36,7 @@ export const GET: RequestHandler = async (req) => {
 	return json(
 		settings.map((s) => ({
 			id: Number(s.uniquetimestamp),
+			name: s.name,
 			embed: getDiscordEmbed(s),
 		})) as GETResponse,
 	);
