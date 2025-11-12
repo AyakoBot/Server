@@ -1,4 +1,4 @@
-import { cacheDB as envCacheDB, devCacheDB as envDevCacheDB } from '$env/static/private';
+import { cacheDB as envCacheDB, devCacheDB as envDevCacheDB, redis } from '$env/static/private';
 import Redis from 'ioredis';
 
 import AuditLogCache from '@ayako/gateway/src/BaseClient/Bot/CacheClasses/auditlog.js';
@@ -31,12 +31,14 @@ import WelcomeScreenCache from '@ayako/gateway/src/BaseClient/Bot/CacheClasses/w
 
 export const prefix = 'cache';
 const cacheDBnum = process.argv.includes('--dev') ? envDevCacheDB : envCacheDB;
+const schedDBnum = process.argv.includes('--dev') ? envDevCacheDB : '1';
 
 if (!cacheDBnum || isNaN(Number(cacheDBnum))) {
 	throw new Error('No cache DB number provided in env vars');
 }
 
-export const cacheDB = new Redis({ host: '127.0.0.1', db: Number(cacheDBnum) });
+export const cacheDB = new Redis({ host: redis, db: Number(cacheDBnum) });
+export const schedDB = new Redis({ host: redis, db: Number(schedDBnum) });
 await cacheDB.config('SET', 'notify-keyspace-events', 'Ex');
 
 export default cacheDB;
