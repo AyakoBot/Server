@@ -37,9 +37,21 @@ if (!cacheDBnum || isNaN(Number(cacheDBnum))) {
 	throw new Error('No cache DB number provided in env vars');
 }
 
-export const cacheDB = new Redis({ host: redis, db: Number(cacheDBnum) });
-export const schedDB = new Redis({ host: redis, db: Number(schedDBnum) });
-await cacheDB.config('SET', 'notify-keyspace-events', 'Ex');
+export const cacheDB = new Redis({
+	host: redis,
+	db: Number(cacheDBnum),
+	lazyConnect: true,
+});
+
+export const schedDB = new Redis({
+	host: redis,
+	db: Number(schedDBnum),
+	lazyConnect: true,
+});
+
+cacheDB.once('connect', () => {
+	cacheDB.config('SET', 'notify-keyspace-events', 'Ex').catch(console.error);
+});
 
 export default cacheDB;
 
