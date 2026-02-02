@@ -1,5 +1,6 @@
 import { DATABASE_URL } from '$env/static/private';
-import { Prisma, PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 
 const client = new PrismaClient({
 	datasources: { db: { url: DATABASE_URL } },
@@ -9,7 +10,7 @@ const client = new PrismaClient({
 			try {
 				return await query(args);
 			} catch (error) {
-				if (error instanceof Prisma.PrismaClientKnownRequestError) return null;
+				if (error instanceof PrismaClientKnownRequestError) return null;
 				throw error;
 			}
 		},

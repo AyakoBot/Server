@@ -1,5 +1,5 @@
 import { METRICS_TOKEN, redis } from '$env/static/private';
-import Redis from '$lib/server/redis.js';
+import cache from '$lib/server/redis.js';
 import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
@@ -15,7 +15,7 @@ export const GET: RequestHandler = async (req) => {
 
 const getAll = async () => {
 	const keys = ['metrics:Ayako - Manager', 'metrics:api']; // , 'metrics:cluster', 'metrics:bot'
-	const res = await Promise.all(keys.map((k) => Redis.get(k)));
+	const res = await Promise.all(keys.map((k) => cache.cacheDb.get(k)));
 
 	const finished: { [key: string]: string } = {};
 	res.map((r, i) => (finished[keys[i]] = r ?? ''));

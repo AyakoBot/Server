@@ -1,7 +1,7 @@
 import type { RequestHandler } from './$types';
-import settingsEditorTypes from '@ayako/bot/src/BaseClient/Other/constants/settingsEditorTypes';
+import settingsEditorTypes from '@ayako/bot/src/BaseClient/Other/constants/settingsEditorTypes.js';
 import settings from '@ayako/bot/src/SlashCommands/Commands/settings';
-import type { EditorTypes } from '@ayako/bot/src/Typings/Settings';
+import type { EditorTypes } from '@ayako/bot/src/Typings/Settings.js';
 import {
 	ApplicationCommandOptionType,
 	type APIApplicationCommandSubcommandGroupOption,

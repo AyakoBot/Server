@@ -1,7 +1,7 @@
 import getPunishments from '$lib/scripts/util/getPunishments.js';
 import validateToken from '$lib/scripts/util/validateToken';
 import DataBase from '$lib/server/database.js';
-import redis from '$lib/server/redis.js';
+import cache from '$lib/server/redis.js';
 import { AnswerType, type appealquestions } from '@prisma/client';
 import { error } from '@sveltejs/kit';
 import getUser, { AuthTypes } from '$lib/scripts/util/getUser';
@@ -75,7 +75,7 @@ export const POST: RequestHandler = async (req) => {
 		},
 	});
 
-	redis.publish(
+	cache.cacheDb.publish(
 		'appeal',
 		JSON.stringify({ guildId: punishment.guildid, punishmentId, userId: user.userid }),
 	);

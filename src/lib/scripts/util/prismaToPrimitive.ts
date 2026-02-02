@@ -1,4 +1,4 @@
-import { Decimal } from '@prisma/client/runtime/library';
+import { Decimal } from '@prisma/client/runtime/client';
 
 const prismaToPrimitive = <T extends Record<string, any>>(data: T): T => {
 	const transformed = { ...data };

@@ -1,5 +1,5 @@
-import redis from '$lib/server/redis.js';
-import type { RUser } from '@ayako/bot/src/Typings/Redis';
+import cache from '$lib/server/redis.js';
+import type { RUser } from '@ayako/bot/src/Typings/Redis.js';
 import { json } from '@sveltejs/kit';
 import makeReadableError from '$lib/scripts/util/makeReadableError';
 import z from 'zod';
@@ -29,10 +29,10 @@ export const PUT: RequestHandler = async (req) => {
 
 	const { userIds } = validBody.data;
 
-	const keystore = await redis.hgetall('keystore:users');
+	const keystore = await cache.cacheDb.hgetall('keystore:users');
 	const userKeys = Object.keys(keystore).filter((k) => userIds.includes(k.split(':').pop()!));
 
-	const users = await Promise.all(userKeys.map((k) => redis.get(k))).then((us) =>
+	const users = await Promise.all(userKeys.map((k) => cache.cacheDb.get(k))).then((us) =>
 		us.map((u) => (u ? (JSON.parse(u) as RUser) : null)),
 	);
 

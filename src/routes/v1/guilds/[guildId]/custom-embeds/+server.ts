@@ -2,7 +2,7 @@ import checkPermissions from '$lib/scripts/util/checkPermissions';
 import getUser, { AuthTypes } from '$lib/scripts/util/getUser';
 import validateToken from '$lib/scripts/util/validateToken';
 import DataBase from '$lib/server/database.js';
-import getDiscordEmbed from '@ayako/bot/src/BaseClient/UtilModules/getDiscordEmbed';
+import getDiscordEmbed from '@ayako/bot/src/BaseClient/UtilModules/getDiscordEmbed.js';
 import { error, json } from '@sveltejs/kit';
 import type { APIEmbed } from 'discord-api-types/v10';
 import z from 'zod';

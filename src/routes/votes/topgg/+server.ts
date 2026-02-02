@@ -1,7 +1,7 @@
 import type { TopGGVote } from '@ayako/bot/src/Typings/TopGG.js';
 import type { RequestHandler } from './$types';
 import DataBase from '$lib/server/database.js';
-import redis from '$lib/server/redis.js';
+import cache from '$lib/server/redis.js';
 import { error, json } from '@sveltejs/kit';
 import { z } from 'zod';
 import makeReadableError from '$lib/scripts/util/makeReadableError.js';
@@ -32,7 +32,7 @@ export const POST: RequestHandler = async (req) => {
 	const exists = await DataBase.votesettings.count({ where: { token: parsed.authorization } });
 	if (!exists) return error(498, 'Invalid token');
 
-	redis.publish('vote', JSON.stringify(parsed));
+	cache.cacheDb.publish('vote', JSON.stringify(parsed));
 
 	return json({ success: true });
 };

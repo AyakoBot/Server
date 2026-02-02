@@ -3,12 +3,12 @@ import getUser, { AuthTypes } from '$lib/scripts/util/getUser';
 import prismaToPrimitive from '$lib/scripts/util/prismaToPrimitive';
 import validateToken from '$lib/scripts/util/validateToken';
 import DataBase from '$lib/server/database.js';
-import EditorTypes from '@ayako/bot/src/BaseClient/Other/constants/settingsEditorTypes';
+import EditorTypes from '@ayako/bot/src/BaseClient/Other/constants/settingsEditorTypes.js';
 import {
  SettingsName2TableName,
  type CRUDResult,
  type SettingNames,
-} from '@ayako/bot/src/Typings/Settings';
+} from '@ayako/bot/src/Typings/Settings.js';
 import { error, json } from '@sveltejs/kit';
 import z from 'zod';
 import type { RequestHandler } from './$types';

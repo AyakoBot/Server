@@ -2,7 +2,7 @@ import getUser, { AuthTypes } from '$lib/scripts/util/getUser';
 import makeReadableError from '$lib/scripts/util/makeReadableError';
 import validateToken from '$lib/scripts/util/validateToken';
 import DataBase from '$lib/server/database.js';
-import interactions from '@ayako/bot/src/BaseClient/Other/constants/interactions';
+import interactions from '@ayako/bot/src/BaseClient/Other/constants/interactions.js';
 import { error, json } from '@sveltejs/kit';
 import z from 'zod';
 import type { RequestHandler } from './$types';
