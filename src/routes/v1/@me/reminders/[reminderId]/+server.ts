@@ -4,7 +4,7 @@ import { error, json } from '@sveltejs/kit';
 import validateToken from '$lib/scripts/util/validateToken';
 import DataBase from '$lib/server/database';
 import type { Reminder } from '@prisma/client';
-import { Reminder as ReminderClass } from '$lib/scripts/util/Reminder';
+// import { Reminder as ReminderClass } from '$lib/scripts/util/Reminder';
 import { Decimal } from '@prisma/client/runtime/client';
 
 export const GET: RequestHandler = async (req) => {
@@ -43,9 +43,10 @@ export const DELETE: RequestHandler = async (req) => {
 	const user = await getUser(token, [AuthTypes.Bot, AuthTypes.Bearer]);
 	if (user instanceof Response) return user;
 
-	const { reminderId } = req.params;
+ // TODO: re-implement reminder logic
 
-	new ReminderClass({ startTime: new Decimal(reminderId), userId: user.userid }, false).delete();
+	// const { reminderId } = req.params;
+	// new ReminderClass({ startTime: new Decimal(reminderId), userId: user.userid }, false).delete();
 
 	return new Response(null, { status: 204 });
 };

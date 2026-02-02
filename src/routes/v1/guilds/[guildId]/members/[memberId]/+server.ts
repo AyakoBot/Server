@@ -1,9 +1,9 @@
 import getUser, { AuthTypes } from '$lib/scripts/util/getUser';
 import validateToken from '$lib/scripts/util/validateToken';
 import DataBase from '$lib/server/database.js';
-import type { RMember } from '@ayako/gateway/src/BaseClient/Bot/CacheClasses/member';
+import type { RMember } from '@ayako/utility';
 import { error, json } from '@sveltejs/kit';
-import { cache } from 'src/lib/server/redis';
+import cache from 'src/lib/server/redis';
 import z from 'zod';
 import type { RequestHandler } from './$types';
 

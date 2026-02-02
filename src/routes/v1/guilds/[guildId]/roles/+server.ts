@@ -1,10 +1,10 @@
 import getUser, { AuthTypes } from '$lib/scripts/util/getUser';
 import validateToken from '$lib/scripts/util/validateToken';
 import DataBase from '$lib/server/database.js';
-import type { RRole } from '@ayako/gateway/src/BaseClient/Bot/CacheClasses/role';
+import type { RRole } from '@ayako/utility';
 import { error, json } from '@sveltejs/kit';
 import checkPermissions from 'src/lib/scripts/util/checkPermissions';
-import { cache } from 'src/lib/server/redis';
+import cache from 'src/lib/server/redis';
 import z from 'zod';
 import type { RequestHandler } from './$types';
 

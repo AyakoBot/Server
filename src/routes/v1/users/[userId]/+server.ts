@@ -1,10 +1,10 @@
 import makeReadableError from '$lib/scripts/util/makeReadableError';
 import DataBase from '$lib/server/database.js';
-import type { RUser } from '@ayako/gateway/src/BaseClient/Bot/CacheClasses/user';
+import type { RUser } from '@ayako/utility';
 import { error, json } from '@sveltejs/kit';
 import getUser, { AuthTypes } from 'src/lib/scripts/util/getUser';
 import validateToken from 'src/lib/scripts/util/validateToken';
-import { cache } from 'src/lib/server/redis';
+import cache from 'src/lib/server/redis';
 import { z } from 'zod';
 import type { RequestHandler } from './$types';
 

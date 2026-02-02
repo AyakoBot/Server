@@ -1,6 +1,6 @@
 import getUser, { AuthTypes } from '$lib/scripts/util/getUser';
 import makeReadableError from '$lib/scripts/util/makeReadableError';
-import { Reminder as ReminderClass } from '$lib/scripts/util/Reminder';
+// import { Reminder as ReminderClass } from '$lib/scripts/util/Reminder';
 import validateToken from '$lib/scripts/util/validateToken';
 import DataBase from '$lib/server/database';
 import type { Reminder } from '@prisma/client';
@@ -68,20 +68,23 @@ export const POST: RequestHandler = async (req) => {
 		return error(400, 'startTime cannot be in the future');
 	}
 
-	const reminder = new ReminderClass({
-		channelId: 'Website',
-		endTime: new Decimal(body.data.endTime),
-		reason: body.data.reason,
-		userId: user.userid,
-		startTime: new Decimal(body.data.startTime || Date.now()),
-	});
+ // TODO: re-implement reminder creation logic
+ throw new Error('Reminders are disabled on the API server.');
 
-	return json({
-		...reminder.toJSON(),
-		id: Number(reminder.toJSON().startTime),
-		endTime: Number(reminder.toJSON().endTime),
-		startTime: Number(reminder.toJSON().startTime),
-	} as POSTResponse);
+	// const reminder = new ReminderClass({
+	// 	channelId: 'Website',
+	// 	endTime: new Decimal(body.data.endTime),
+	// 	reason: body.data.reason,
+	// 	userId: user.userid,
+	// 	startTime: new Decimal(body.data.startTime || Date.now()),
+	// });
+
+	// return json({
+	// 	...reminder.toJSON(),
+	// 	id: Number(reminder.toJSON().startTime),
+	// 	endTime: Number(reminder.toJSON().endTime),
+	// 	startTime: Number(reminder.toJSON().startTime),
+	// } as POSTResponse);
 };
 
 export type POSTResponse = Omit<Reminder, 'startTime' | 'endTime'> & {

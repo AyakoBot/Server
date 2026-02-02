@@ -1,4 +1,4 @@
-import { cache } from '$lib/server/redis';
+import cache from '$lib/server/redis';
 import { PermissionFlagsBits } from 'discord-api-types/v10';
 
 export default async (

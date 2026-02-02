@@ -2,13 +2,20 @@ import { dev } from '$env/static/private';
 import { PUBLIC_CDN, PUBLIC_HOSTNAME } from '$env/static/public';
 import endpoints from '$lib/scripts/util/endpoints';
 import cdn from '$lib/server/cdn';
-import { redirect, type Handle } from '@sveltejs/kit';
+import { error, redirect, type Handle } from '@sveltejs/kit';
 import fs from 'fs';
+import sleep from './lib/scripts/util/sleep';
 
 const inDev = dev === 'true';
 
 /** @type {import('@sveltejs/kit').Handle} */
 export const handle: Handle = async ({ event, resolve }) => {
+	if (event.url.hostname === 'marvel.wzxy.org') {
+		await sleep(60000);
+
+		return error(503, 'Service Temporarily Unavailable');
+	}
+
 	if (!inDev) doAPIMetrics(event.request);
 
 	if (event.request.method === 'OPTIONS') {

@@ -1,5 +1,5 @@
 import makeReadableError from '$lib/scripts/util/makeReadableError';
-import redis, { cache } from '$lib/server/redis';
+import cache from '$lib/server/redis';
 import type { RUser } from '@ayako/bot/src/Typings/Redis.js';
 import { json } from '@sveltejs/kit';
 import { z } from 'zod';
@@ -36,7 +36,7 @@ export const GET: RequestHandler = async (req) => {
 	let cursor = '0';
 
 	do {
-		const result = await redis.hscan(cache.users.keystore(), cursor, 'COUNT', 100);
+		const result = await cache.cacheDb.hscan(cache.users.keystore(), cursor, 'COUNT', 100);
 		cursor = result[0];
 		const entries = result[1];
 
@@ -51,7 +51,7 @@ export const GET: RequestHandler = async (req) => {
 
 		const userIds = keystoreKeys.map((k) => k.split(':').slice(2).join(':'));
 
-		const pipeline = redis.pipeline();
+		const pipeline = cache.cacheDb.pipeline();
 		userIds.forEach((userId) => pipeline.get(`${cache.users.key(userId)}:current`));
 		const results = await pipeline.exec();
 

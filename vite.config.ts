@@ -31,7 +31,7 @@ export default defineConfig({
 			ignoreDynamicRequires: true,
 		},
 		rollupOptions: {
-			external: ['zlib-sync'],
+			external: ['zlib-sync', 'bun'],
 		},
 	},
 	ssr: {

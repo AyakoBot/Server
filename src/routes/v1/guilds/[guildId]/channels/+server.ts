@@ -1,12 +1,12 @@
 import getUser, { AuthTypes } from '$lib/scripts/util/getUser';
 import validateToken from '$lib/scripts/util/validateToken';
 import DataBase from '$lib/server/database.js';
-import type { RChannel } from '@ayako/gateway/src/BaseClient/Bot/CacheClasses/channel';
+import type { RChannel } from '@ayako/utility';
 import { error, json } from '@sveltejs/kit';
-import { ChannelType } from 'discord-api-types/v10';
-import checkChannelPermissions from 'src/lib/scripts/util/checkChannelPermissions';
+import { ChannelType, PermissionFlagsBits } from 'discord-api-types/v10';
+import { getChannelPerms } from '@ayako/utility';
 import checkPermissions from 'src/lib/scripts/util/checkPermissions';
-import { cache } from 'src/lib/server/redis';
+import cache from 'src/lib/server/redis';
 import z from 'zod';
 import type { RequestHandler } from './$types';
 
@@ -45,9 +45,9 @@ export const GET: RequestHandler = async (req) => {
 	const channels = await cache.channels.getAll(guildId.data);
 	const channelPermissions = await Promise.all(
 		channels.map((c) =>
-			checkChannelPermissions(guildId.data, c.id, ['ViewChannel'], user.userid).then((p) => ({
+			getChannelPerms.call(cache, guildId.data, user.userid, c.id).then((p) => ({
 				id: c.id,
-				perms: p,
+				perms: (p && PermissionFlagsBits.ViewChannel) === PermissionFlagsBits.ViewChannel,
 			})),
 		),
 	);
@@ -55,7 +55,9 @@ export const GET: RequestHandler = async (req) => {
 	return json(
 		channels
 			.filter((c) => (types.data ? types.data.includes(String(c.type)) : true))
-			.filter((c) => channelPermissions.find((cp) => cp.id === c.id)?.perms || false) as GETResponse,
+			.filter(
+				(c) => channelPermissions.find((perm) => perm.id === c.id)?.perms || false,
+			) as GETResponse,
 	);
 };
 
