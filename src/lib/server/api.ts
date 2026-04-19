@@ -9,7 +9,9 @@ const self = {
 		if (api) return api;
 
 		api = new API(
-			new REST({ authPrefix: 'Bot', api: `http://${proxy}:8080/api` }).setToken(BOT_TOKEN),
+			new REST({ authPrefix: 'Bot', api: `http://${proxy}:8080/api` }).setToken(
+				BOT_TOKEN.replace('Bot ', ''),
+			),
 		);
 		return api;
 	},

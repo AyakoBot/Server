@@ -1,14 +1,18 @@
 import cache from '$lib/server/redis';
 import { PermissionFlagsBits } from 'discord-api-types/v10';
+import self from '$lib/server/api';
 
 export default async (
 	guildId: string,
 	requiredPermissions: (keyof typeof PermissionFlagsBits)[],
 	userId: string,
 ) => {
-	if (!requiredPermissions.length) return true;
-
-	const member = await cache.members.get(guildId, userId);
+	const member =
+		(await cache.members.get(guildId, userId)) ||
+		(await self
+			.getAPI()
+			.guilds.getMember(guildId, userId)
+			.catch(() => null));
 	if (!member) return false;
 	if (!requiredPermissions.length) return true;
 

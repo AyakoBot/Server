@@ -4,7 +4,7 @@ import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async () => {
 	const version = await fs
-		.readFile('../../../../../../Bot/package.json', 'utf-8')
+		.readFile('/app/Ayako/packages/Bot/package.json', 'utf-8')
 		.then((data) => JSON.parse(data).version)
 		.catch(() => 'unknown');
 

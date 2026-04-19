@@ -1,5 +1,5 @@
 import DataBase from '$lib/server/database.js';
-import redis from '$lib/server/redis.js';
+import cache from '$lib/server/redis.js';
 import { error, json } from '@sveltejs/kit';
 import { InteractionType, type APIInteraction } from 'discord-api-types/v10';
 import sleep from '$lib/scripts/util/sleep';
@@ -32,7 +32,7 @@ export const POST: RequestHandler = async (req) => {
 	if (!isVerified) return error(401, 'Invalid signature');
 	if (body.type === InteractionType.Ping) return json({ type: 1 });
 
-	redis.publish('interaction', JSON.stringify(rawBody));
+	cache.cacheDb.publish('interaction', JSON.stringify(rawBody));
 
 	await sleep(10000);
 
