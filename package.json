@@ -51,11 +51,11 @@
 		"typescript": "^5.9.3",
 		"vite": "^7.3.1"
 	},
-	"packageManager": "pnpm@11.6.0",
-	"engines": {
-		"node": "^24.13.0",
-		"pnpm": "^11.6.0"
-	},
+ "packageManager": "pnpm@11.6.0",
+ "engines": {
+  "node": "^25.6.0",
+  "pnpm": "^11.6.0"
+ },
 	"prisma": {
 		"schema": "../../prisma/schema.prisma"
 	}
