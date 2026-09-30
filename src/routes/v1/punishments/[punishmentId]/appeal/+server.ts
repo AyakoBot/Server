@@ -2,7 +2,7 @@ import getPunishments from '$lib/scripts/util/getPunishments.js';
 import validateToken from '$lib/scripts/util/validateToken';
 import DataBase from '$lib/server/database.js';
 import cache from '$lib/server/redis.js';
-import { AnswerType, type appealquestions } from '@prisma/client';
+import { AnswerType, type appealquestions } from '$lib/server/prisma.js';
 import { error } from '@sveltejs/kit';
 import getUser, { AuthTypes } from '$lib/scripts/util/getUser';
 import type { RequestHandler } from './$types';

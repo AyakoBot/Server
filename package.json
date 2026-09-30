@@ -18,7 +18,7 @@
 		"@discordjs/core": "^2.4.0",
 		"@discordjs/rest": "^2.6.0",
 		"@octokit/rest": "^22.0.1",
-		"@prisma/client": "^7.3.0",
+		"@prisma/client": "7.3.0",
 		"@sveltejs/adapter-node": "^5.5.2",
 		"discord-api-types": "0.38.38",
 		"dotenv": "^17.2.3",
@@ -46,7 +46,7 @@
 		"eslint-plugin-svelte": "^3.14.0",
 		"prettier": "^3.8.1",
 		"prettier-plugin-svelte": "^3.4.1",
-		"prisma": "^7.3.0",
+		"prisma": "7.3.0",
 		"svelte": "5.49.1",
 		"typescript": "^5.9.3",
 		"vite": "^7.3.1"

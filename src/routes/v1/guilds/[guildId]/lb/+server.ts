@@ -4,7 +4,7 @@ import { xpToLevel } from '@ayako/bot/src/Events/BotEvents/messageEvents/message
 import { error, json } from '@sveltejs/kit';
 import { z } from 'zod';
 import type { RequestHandler } from './$types';
-import { FormulaType } from '@prisma/client';
+import { FormulaType } from '$lib/server/prisma.js';
 
 export const GET: RequestHandler = async (req) => {
 	const guildId = z
