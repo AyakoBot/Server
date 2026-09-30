@@ -76,8 +76,10 @@ export const GET: RequestHandler = async (req) => {
 		return error(403, 'User not allowed');
 	}
 
-	await DataBase.linkedRoleTokens.create({
-		data: {
+	await DataBase.linkedRoleTokens.upsert({
+		where: { botId_userId: { botId: settings.botId, userId: identity.user.id } },
+		update: { token: tokens.refresh_token },
+		create: {
 			botId: settings.botId,
 			token: tokens.refresh_token,
 			userId: identity.user.id,
